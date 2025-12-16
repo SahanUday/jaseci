@@ -2,7 +2,7 @@
 
 This guide covers conditional rendering patterns in JAC-lang for building dynamic React-like user interfaces.
 
-> **Full Examples**: See the comp working examples at [jac-client-examples/conditional-rendering](https://github.com/jaseci-labs/jac-client-examples/tree/main/conditional-rendering)
+> **Full Examples**: See the complete working examples at [jac-client-examples/conditional-rendering](https://github.com/jaseci-labs/jac-client-examples/tree/main/conditional-rendering)
 
 ---
 

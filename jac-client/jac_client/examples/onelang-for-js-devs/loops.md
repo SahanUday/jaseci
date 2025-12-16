@@ -2,7 +2,7 @@
 
 This guide covers loop syntax in JAC-Client for developers familiar with JavaScript.
 
-> **Full Examples**: See the comp working examples at [jac-client-examples/loops](https://github.com/jaseci-labs/jac-client-examples/tree/main/loops)
+> **Full Examples**: See the complete working examples at [jac-client-examples/loops](https://github.com/jaseci-labs/jac-client-examples/tree/main/loops)
 
 ---
 

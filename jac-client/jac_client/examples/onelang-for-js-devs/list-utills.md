@@ -2,7 +2,7 @@
 
 This guide covers array and list methods for developers familiar with JavaScript.
 
-> **Full Examples**: See the comp working examples at [jac-client-examples/list-utils](https://github.com/jaseci-labs/jac-client-examples/tree/main/list-utils)
+> **Full Examples**: See the complete working examples at [jac-client-examples/list-utils](https://github.com/jaseci-labs/jac-client-examples/tree/main/list-utils)
 
 ---
 
