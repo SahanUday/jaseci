@@ -130,64 +130,95 @@ impl JacClientModuleIntrospector.render_page(
         css_hash = hashlib.sha256(css_file.read_bytes()).hexdigest()[:8];
         css_link = f'<link rel="stylesheet" href="/static/main.css?hash={css_hash}"/>';
     }
+    meta_defaults = {
+        "charset": "UTF-8",
+        "title": function_name,
+        "viewport": "width=device-width, initial-scale=1",
+        "description": None,
+        "robots": "index, follow",
+        "canonical": None,
+        "og_type": "website",
+        "og_title": function_name,
+        "og_description": None,
+        "og_url": None,
+        "og_image": None,
+        "theme_color": "#ffffff",
+        "icon": None,
+    };
+    HEAD_SCHEMA = {
+        "meta": {
+            "charset": {"attr": "charset"},
+            "viewport": {"name": "viewport"},
+            "robots": {"name": "robots"},
+            "theme_color": {"name": "theme-color"},
+            "description": {"name": "description"},
+        },
+        "title": True,
+        "og": {
+            "og_type": "type",
+            "og_title": "title",
+            "og_description": "description",
+            "og_url": "url",
+            "og_image": "image",
+        },
+        "link": {
+            "canonical": {"rel": "canonical", "attr": "href"},
+            "icon": {"rel": "icon", "attr": "href"},
+        },
+    };
+    # Build head content
+    def build_head(meta: dict) -> str{
+        lines:list = [];
+        # Meta tags
+        for (key, cfg) in HEAD_SCHEMA.get("meta", {}).items(){
+            val = meta.get(key);
+            if not val{
+                continue;
+            }
+            if "charset" in key{
+                lines.append(
+                    f'<meta charset="{html.escape(val)}"/>'
+                );
+            } else {
+                lines.append(
+                    f'<meta name="{cfg["name"]}" content="{html.escape(val)}"/>'
+                );
+            }
+        }
+        # Title
+        if HEAD_SCHEMA.get("title") and meta.get("title"){
+            lines.append(
+                f'<title>{html.escape(meta["title"])}</title>'
+            );
+        }
+        # OpenGraph tags
+        for (key, og_name) in HEAD_SCHEMA.get("og", {}).items(){
+            val = meta.get(key);
+            if not val{
+                continue;
+            }
+            lines.append(
+                f'<meta property="og:{og_name}" content="{html.escape(val)}"/>'
+            );
+        }
+        # Link tags
+        for (key, cfg) in HEAD_SCHEMA.get("link", {}).items(){
+            val = meta.get(key);
+            if not val{
+                continue;
+            }
+            lines.append(
+                f'<link rel="{cfg["rel"]}" {cfg["attr"]}="{html.escape(val)}"/>'
+            );
+        }
+        return ("\n            ".join(lines));
+    }
     # Get meta data from config
     client_cfg = config.get_plugin_config("client") if config else None;
     meta_data = client_cfg.get("app_meta_data", {}) if client_cfg else {};
-    charset = meta_data.get("charset", "UTF-8");
-    title = meta_data.get("title", function_name);
-    viewport = meta_data.get("viewport", "width=device-width, initial-scale=1");
-    description = meta_data.get("description", None);
-    robots = meta_data.get("robots", "index, follow");
-    canonical = meta_data.get("canonical", None);
-    og_type = meta_data.get("og_type", "website");
-    og_title = meta_data.get("og_title", title);
-    og_description = meta_data.get("og_description", None);
-    og_url = meta_data.get("og_url", None);
-    og_image = meta_data.get("og_image", None);
-    theme_color = meta_data.get("theme_color", "#ffffff");
-    icon = meta_data.get("icon", None);
-    # Build head content from TOML metadata
-    head_content = f'<meta charset="{html.escape(charset)}"/>\n            <meta name="viewport" content="{html.escape(
-        viewport
-    )}"/>\n            <title>{html.escape(title)}</title>';
-    head_content += f'\n            <meta name="robots" content="{html.escape(robots)}"/>';
-    head_content += f'\n            <meta name="theme-color" content="{html.escape(
-        theme_color
-    )}"/>';
-    head_content += f'\n            <meta property="og:type" content="{html.escape(
-        og_type
-    )}"/>';
-    head_content += f'\n            <meta property="og:title" content="{html.escape(
-        og_title
-    )}"/>';
-    if description {
-        head_content += f'\n            <meta name="description" content="{html.escape(
-            description
-        )}"/>';
-    }
-    if canonical {
-        head_content += f'\n            <link rel="canonical" href="{html.escape(
-            canonical
-        )}"/>';
-    }
-    if icon {
-        head_content += f'\n            <link rel="icon" href="{html.escape(icon)}"/>';
-    }
-    if og_url {
-        head_content += f'\n            <meta property="og:url" content="{html.escape(
-            og_url
-        )}"/>';
-    }
-    if og_image {
-        head_content += f'\n            <meta property="og:image" content="{html.escape(
-            og_image
-        )}"/>';
-    }
-    if og_description {
-        head_content += f'\n            <meta property="og:description" content="{html.escape(
-            og_description
-        )}"/>';
-    }
+    # Merge TOML meta data with defaults
+    meta = {k: meta_data.get(k, v) for (k, v) in meta_defaults.items()};
+    head_content = build_head(meta);
     if css_link {
         head_content += f"\n            {css_link}";
     }
