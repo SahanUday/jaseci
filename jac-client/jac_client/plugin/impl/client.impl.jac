@@ -144,6 +144,7 @@ impl JacClientModuleIntrospector.render_page(
         "og_image": None,
         "theme_color": "#ffffff",
         "icon": None,
+
     };
     HEAD_SCHEMA = {
         "meta": {
@@ -152,6 +153,7 @@ impl JacClientModuleIntrospector.render_page(
             "robots": {"name": "robots"},
             "theme_color": {"name": "theme-color"},
             "description": {"name": "description"},
+
         },
         "title": True,
         "og": {
@@ -160,25 +162,26 @@ impl JacClientModuleIntrospector.render_page(
             "og_description": "description",
             "og_url": "url",
             "og_image": "image",
+
         },
         "link": {
             "canonical": {"rel": "canonical", "attr": "href"},
             "icon": {"rel": "icon", "attr": "href"},
+
         },
+
     };
     # Build head content
-    def build_head(meta: dict) -> str{
-        lines:list = [];
+    def build_head(meta: dict) -> str {
+        lines: list = [];
         # Meta tags
-        for (key, cfg) in HEAD_SCHEMA.get("meta", {}).items(){
+        for (key, cfg) in HEAD_SCHEMA.get("meta", {}).items() {
             val = meta.get(key);
-            if not val{
+            if not val {
                 continue;
             }
-            if "charset" in key{
-                lines.append(
-                    f'<meta charset="{html.escape(val)}"/>'
-                );
+            if "charset" in key {
+                lines.append(f'<meta charset="{html.escape(val)}"/>');
             } else {
                 lines.append(
                     f'<meta name="{cfg["name"]}" content="{html.escape(val)}"/>'
@@ -186,15 +189,13 @@ impl JacClientModuleIntrospector.render_page(
             }
         }
         # Title
-        if HEAD_SCHEMA.get("title") and meta.get("title"){
-            lines.append(
-                f'<title>{html.escape(meta["title"])}</title>'
-            );
+        if HEAD_SCHEMA.get("title") and meta.get("title") {
+            lines.append(f'<title>{html.escape(meta["title"])}</title>');
         }
         # OpenGraph tags
-        for (key, og_name) in HEAD_SCHEMA.get("og", {}).items(){
+        for (key, og_name) in HEAD_SCHEMA.get("og", {}).items() {
             val = meta.get(key);
-            if not val{
+            if not val {
                 continue;
             }
             lines.append(
@@ -202,9 +203,9 @@ impl JacClientModuleIntrospector.render_page(
             );
         }
         # Link tags
-        for (key, cfg) in HEAD_SCHEMA.get("link", {}).items(){
+        for (key, cfg) in HEAD_SCHEMA.get("link", {}).items() {
             val = meta.get(key);
-            if not val{
+            if not val {
                 continue;
             }
             lines.append(
