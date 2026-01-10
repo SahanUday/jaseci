@@ -206,8 +206,6 @@ impl JacClientModuleIntrospector.render_page(
     # Get meta data from config
     client_cfg = config.get_plugin_config("client") if config else None;
     meta_data = client_cfg.get("app_meta_data", {}) if client_cfg else {};
-    # Merge TOML meta data with defaults
-    # meta = {k: meta_data.get(k, v) for (k, v) in meta_defaults.items()};
     head_content = build_head();
     if css_link {
         head_content += f"\n            {css_link}";
