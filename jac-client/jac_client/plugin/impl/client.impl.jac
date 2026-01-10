@@ -133,7 +133,10 @@ impl JacClientModuleIntrospector.render_page(
     HEAD_SCHEMA = {
         "meta": {
             "charset": {"attr": "charset", "dflt": "UTF-8"},
-            "viewport": {"name": "viewport", "dflt": "width=device-width, initial-scale=1"},
+            "viewport": {
+                "name": "viewport",
+                "dflt": "width=device-width, initial-scale=1"
+            },
             "robots": {"name": "robots", "dflt": "index, follow"},
             "theme_color": {"name": "theme-color", "dflt": "#ffffff"},
             "description": {"name": "description", "dflt": None},
@@ -146,6 +149,7 @@ impl JacClientModuleIntrospector.render_page(
             "og_description": {"name": "description", "dflt": None},
             "og_url": {"name": "url", "dflt": None},
             "og_image": {"name": "image", "dflt": None},
+
         },
         "link": {
             "canonical": {"rel": "canonical", "attr": "href", "dflt": None},
@@ -155,7 +159,7 @@ impl JacClientModuleIntrospector.render_page(
 
     };
     # Build head content
-    def build_head() -> str {
+    def build_head -> str {
         lines: list = [];
         # Meta tags
         for (key, cfg) in HEAD_SCHEMA.get("meta", {}).items() {
@@ -173,7 +177,9 @@ impl JacClientModuleIntrospector.render_page(
         }
         # Title
         if HEAD_SCHEMA.get("title") and meta_data.get("title", function_name) {
-            lines.append(f'<title>{html.escape(meta_data.get("title", function_name))}</title>');
+            lines.append(
+                f'<title>{html.escape(meta_data.get("title", function_name))}</title>'
+            );
         }
         # OpenGraph tags
         for (key, og_name) in HEAD_SCHEMA.get("og", {}).items() {
