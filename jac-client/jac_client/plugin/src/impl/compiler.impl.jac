@@ -147,7 +147,7 @@ impl ViteCompiler._copy_css_file(
     } except (FileNotFoundError, OSError) { }
 }
 
-"""Recursively compile/copy .jac/.js imports to temp, skipping bundling."""
+"""Recursively compile/copy .jac/.js/.ts/.css imports to temp, skipping bundling."""
 impl ViteCompiler.compile_dependencies_recursively(
     self: ViteCompiler,
     module_path: Path,
