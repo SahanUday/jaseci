@@ -236,14 +236,14 @@ base_route_app = "app"
 
     main_jac_content = '''"""Main entry point for the Jac client application."""
 
-# Client-side imports
-cl import from react { useState, useEffect }
+# Client-side imports (useState is auto-injected when using `has` variables)
+cl import from react { useEffect }
 cl import from .components.Button { Button }
 
 # Client-side component
 cl {
     def:pub app() -> any {
-        [count, setCount] = useState(0);
+        has count: int = 0;
 
         useEffect(lambda -> None {
             console.log("Count updated:", count);
@@ -255,12 +255,12 @@ cl {
             <div style={{display: "flex", gap: "1rem", marginTop: "1rem"}}>
                 <Button
                     label="Increment"
-                    onClick={lambda -> None { setCount(count + 1); }}
+                    onClick={lambda -> None { count = count + 1; }}
                     variant="primary"
                 />
                 <Button
                     label="Reset"
-                    onClick={lambda -> None { setCount(0); }}
+                    onClick={lambda -> None { count = 0; }}
                     variant="secondary"
                 />
             </div>
