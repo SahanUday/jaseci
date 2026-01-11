@@ -127,6 +127,26 @@ impl ViteCompiler._copy_js_file(
     } except FileNotFoundError { }
 }
 
+"""Copy a CSS file to the compiled directory."""
+impl ViteCompiler._copy_css_file(
+    self: ViteCompiler, css_path: Path, source_root: Path
+) -> None {
+    if not css_path.exists() {
+        return;
+    }
+    try {
+        css_code = css_path.read_text(encoding='utf-8');
+        try {
+            relative_path = css_path.relative_to(source_root);
+            output_path = self.compiled_dir / relative_path;
+        } except ValueError {
+            output_path = self.compiled_dir / css_path.name;
+        }
+        output_path.parent.mkdir(parents=True, exist_ok=True);
+        output_path.write_text(css_code, encoding='utf-8');
+    } except (FileNotFoundError, OSError) { }
+}
+
 """Recursively compile/copy .jac/.js imports to temp, skipping bundling."""
 impl ViteCompiler.compile_dependencies_recursively(
     self: ViteCompiler,
@@ -196,7 +216,12 @@ impl ViteCompiler.compile_dependencies_recursively(
         return;
     }
     for (_name, import_path) in manifest.imports.items() {
-        path_obj = Path(import_path).resolve();
+        fixed_path = Path(import_path);
+        extensionless_imports = {'ts', 'tsx', 'js', 'css', 'scss'};
+        if fixed_path.name in extensionless_imports {
+                fixed_path = fixed_path.parent.with_suffix(f".{fixed_path.name}"); 
+        }
+        path_obj = fixed_path.resolve();
         if (path_obj in visited) {
             continue;
         }
@@ -212,6 +237,9 @@ impl ViteCompiler.compile_dependencies_recursively(
             self._copy_js_file(path_obj, source_root);
         } elif (path_obj.suffix in {'.ts','.tsx'}) {
             self._copy_ts_file(path_obj, source_root);
+        } elif (path_obj.suffix in {'.css', '.scss'}) {
+            print(  f'Copying CSS/SCSS file: {path_obj} ' );
+            self._copy_css_file(path_obj, source_root);
         } elif path_obj.is_file() {
             self._copy_asset_file(path_obj, source_root);
         }

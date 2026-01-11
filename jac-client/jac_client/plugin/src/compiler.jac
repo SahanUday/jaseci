@@ -53,6 +53,7 @@ class ViteCompiler {
     ) -> None;
 
     def _get_client_dir(self: ViteCompiler) -> Path;
+    def _copy_css_file(self: ViteCompiler, css_path: Path, source_root: Path) -> None;
     def _copy_js_file(self: ViteCompiler, js_path: Path, source_root: Path) -> None;
     def _copy_ts_file(self: ViteCompiler, ts_path: Path, source_root: Path) -> None;
     def _copy_asset_file(
