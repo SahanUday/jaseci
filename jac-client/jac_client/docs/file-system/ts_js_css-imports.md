@@ -33,7 +33,7 @@ my/
 JAC uses a dot-prefix notation for relative imports, where each dot represents a directory level:
 
 - `.` - Current directory
-- `..` - Parent directory  
+- `..` - Parent directory
 - `...` - Two levels up
 - `....` - Three levels up, and so on
 
@@ -42,17 +42,20 @@ JAC uses a dot-prefix notation for relative imports, where each dot represents a
 Import React components from TypeScript files using the `cl import` syntax:
 
 **From same directory:**
+
 ```jac
 cl import from ".components/Button.tsx" { Button }
 ```
 
 **From nested subdirectories:**
+
 ```jac
 // In pages/level1/homePage.jac <-- importing from components/ (two levels up)
 cl import from "...components/Button.tsx" { Button }
 ```
 
 **Example: Button.tsx Component**
+
 ```tsx
 import React from 'react';
 
@@ -109,17 +112,20 @@ export default Button;
 Import stylesheets without destructuring:
 
 **From same directory:**
+
 ```jac
 cl import ".styles/homePage.css";
 ```
 
 **From nested subdirectories:**
+
 ```jac
 // In pages/level1/homePage.jac <-- importing from styles/ (two levels up)
 cl import "...styles/homePage.css";
 ```
 
 **Example: homePage.css**
+
 ```css
 .home-container {
   padding: 2rem;
@@ -138,6 +144,7 @@ cl import "...styles/homePage.css";
 Import other JAC modules containing components:
 
 **From nested directories:**
+
 ```jac
 // In main.jac <-- importing from pages/level1/
 cl import from ".pages/level1/homePage" { Home }
@@ -217,11 +224,9 @@ cl {
 
 5. **Compiled Output**: All imported files are copied to `.jac/client/compiled/` maintaining the original directory structure
 
-
 ## Troubleshooting
 
 - **Import Not Found**: Verify the relative path dots match the directory depth
 - **Component Not Rendering**: Check that exports in TSX files use named or default exports correctly
 - **CSS Not Applied**: Ensure className attributes match the CSS selectors
 - **Type Errors**: TypeScript interfaces in `.tsx` files work as expected with JAC's type system
-
