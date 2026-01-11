@@ -217,9 +217,9 @@ impl ViteCompiler.compile_dependencies_recursively(
     }
     for (_name, import_path) in manifest.imports.items() {
         fixed_path = Path(import_path);
-        extensionless_imports = {'ts', 'tsx', 'js', 'css', 'scss'};
+        extensionless_imports = {'ts','tsx','js','css','scss'};
         if fixed_path.name in extensionless_imports {
-                fixed_path = fixed_path.parent.with_suffix(f".{fixed_path.name}"); 
+            fixed_path = fixed_path.parent.with_suffix(f".{fixed_path.name}");
         }
         path_obj = fixed_path.resolve();
         if (path_obj in visited) {
@@ -237,8 +237,8 @@ impl ViteCompiler.compile_dependencies_recursively(
             self._copy_js_file(path_obj, source_root);
         } elif (path_obj.suffix in {'.ts','.tsx'}) {
             self._copy_ts_file(path_obj, source_root);
-        } elif (path_obj.suffix in {'.css', '.scss'}) {
-            print(  f'Copying CSS/SCSS file: {path_obj} ' );
+        } elif (path_obj.suffix in {'.css','.scss'}) {
+            print(f'Copying CSS/SCSS file: {path_obj} ');
             self._copy_css_file(path_obj, source_root);
         } elif path_obj.is_file() {
             self._copy_asset_file(path_obj, source_root);
