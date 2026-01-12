@@ -205,6 +205,77 @@ function MyComponent() {
 }
 ```
 
+## Custom File Configuration Pattern
+
+Beyond standard module imports, Jac Client supports custom asset file handling through `jac.toml` configuration. This allows you to include specialized file types (`.js`, `.py`, `.wasm`, `.json`, etc.) as static assets in your build.
+
+### Configuration Structure
+
+Custom asset extensions are configured under `[plugins.client.assets]` in your `jac.toml`:
+
+```toml
+[project]
+name = "my-app"
+version = "1.0.0"
+entry-point = "src/app.jac"
+
+[plugins.client.assets]
+custom_extensions = [".js", ".py", ".wasm", ".json"]
+```
+
+### Default Asset Types
+
+The following asset types are **always supported** without configuration:
+
+- **Images**: `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`, `.ico`
+- **Fonts**: `.woff`, `.woff2`, `.ttf`, `.otf`, `.eot`
+- **Media**: `.mp4`, `.webm`, `.mp3`, `.wav`
+- **Styles**: `.css`
+
+Custom extensions are **additive** and don't replace default types.
+
+### Common Use Cases
+
+#### 1. Web Workers with Python Backend
+
+Enable multi-threaded processing using JavaScript Web Workers with Python via Pyodide:
+
+```toml
+[plugins.client.assets]
+custom_extensions = [".js", ".py"]
+```
+
+**Project Structure:**
+```
+my-jac-project/
+├── jac.toml
+├── src/
+│   └── app.jac
+└── assets/
+    └── workers/
+        ├── worker.js      # JavaScript Web Worker
+        └── worker.py      # Python code for Pyodide
+```
+
+#### 2. Configuration Files
+
+Serve JSON configuration files as static assets:
+
+```toml
+[plugins.client.assets]
+custom_extensions = [".json"]
+```
+
+#### 3. WebAssembly Modules
+
+Serve `.wasm` files for high-performance computations:
+
+```toml
+[plugins.client.assets]
+custom_extensions = [".wasm"]
+```
+
+
 ## Status Summary
 
 - **Category 1 (Named Imports)**: Fully implemented and tested
@@ -213,6 +284,7 @@ function MyComponent() {
 - **Category 4 (Namespace Imports)**: Fully implemented and tested
 - **Relative Paths**: Full support with automatic conversion
 - **String Literal Imports**: Full support for hyphenated package names (react-dom, styled-components, etc.)
+- **Custom Assets Configuration**: Fully supported via jac.toml
 - ️ **Named + Namespace Mix**: Generates but produces invalid JavaScript
 
-**Last Updated**: 2025-10-23
+**Last Updated**: 2026-01-12
