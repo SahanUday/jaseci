@@ -246,6 +246,7 @@ custom_extensions = [".js", ".py"]
 ```
 
 **Project Structure:**
+
 ```
 my-jac-project/
 ├── jac.toml
@@ -274,7 +275,6 @@ Serve `.wasm` files for high-performance computations:
 [plugins.client.assets]
 custom_extensions = [".wasm"]
 ```
-
 
 ## Status Summary
 

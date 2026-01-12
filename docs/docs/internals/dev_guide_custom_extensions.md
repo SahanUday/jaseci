@@ -2,7 +2,6 @@
 
 This guide explains how to extend Jac Client's asset handling system to support additional file types beyond the default supported extensions. This is particularly useful for integrating specialized assets like Web Workers, Python scripts for Pyodide, WebAssembly modules, or custom configuration files.
 
-
 ## Overview
 
 ### What Are Custom Extensions?
@@ -182,6 +181,7 @@ custom_exts = config.get('plugins', {}).get('client', {}).get('assets', {}).get(
 #### Issue 1: Asset Not Found (404)
 
 **Symptoms:**
+
 ```
 GET http://localhost:3000/assets/workers/worker.js 404 (Not Found)
 ```
@@ -203,33 +203,37 @@ GET http://localhost:3000/assets/workers/worker.js 404 (Not Found)
 #### Issue 2: Extension Not Being Copied
 
 **Symptoms:**
+
 - File exists in `assets/` but not in `.client-build/build/assets/`
 
 **Causes & Solutions:**
 
 1. **Case sensitivity mismatch**
+
    ```toml
    # Wrong - file is worker.js not worker.JS
    custom_extensions = [".JS"]
-   
+
    # Correct
    custom_extensions = [".js"]
    ```
 
 2. **Missing dot prefix**
+
    ```toml
    # Wrong
    custom_extensions = ["js", "py"]
-   
+
    # Correct
    custom_extensions = [".js", ".py"]
    ```
 
 3. **Configuration syntax error**
+
    ```toml
    # Wrong - missing quotes
    custom_extensions = [.js, .py]
-   
+
    # Correct
    custom_extensions = [".js", ".py"]
    ```
@@ -250,4 +254,3 @@ Key takeaways for adding custom file extensions:
 - [Jac Client Examples](https://github.com/jaseci-labs/jaseci/tree/main/jac-client/jac_client/examples) - Working examples
 
 ---
-
