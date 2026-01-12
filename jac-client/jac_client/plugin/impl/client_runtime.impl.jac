@@ -70,8 +70,14 @@ impl __jacSpawn(left: str, right: str = "", fields: dict = {}) -> any {
     return await response.json();
 }
 
+cl import from "@tanstack/react-query" { QueryClient, QueryClientProvider, useQuery }
+glob queryClient = Reflect.construct(QueryClient, []);
 impl jacSpawn(left: str, right: str = "", fields: dict = {}) -> any {
-    return __jacSpawn(left, right, fields);
+    queryResult = useQuery({
+        queryKey: ["greet"],
+        queryFn: lambda: __jacSpawn(left, right, fields),
+    });
+    return queryResult;
 }
 
 impl __jacCallFunction(function_name: str, args: dict = {}) -> any {
