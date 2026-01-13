@@ -177,11 +177,20 @@ impl __removeLocalStorage(key: str) -> None {
 }
 
 impl ErrorFallback(error: str, resetErrorBoundary: any) -> any {
-    return <div role="alert"   style={{"padding": "2rem", "textAlign": "center", "fontFamily": "system-ui, -apple-system, sans-serif"}}>
+    return <div
+        role="alert"
+        style={{
+            "padding": "2rem",
+            "textAlign": "center",
+            "fontFamily": "system-ui, -apple-system, sans-serif"
+        }}
+    >
         <h1>
             Something went wrong
         </h1>
-        <p style={{"color": "red"}}>
+        <p
+            style={{"color": "red"}}
+        >
             {error.error.message}
         </p>
         <button
