@@ -2,7 +2,8 @@
 
 impl JacToJSCompiler.add_runtime_imports(self: JacToJSCompiler, js_code: str) -> str {
     jac_jsx_import = 'import {__jacJsx, __jacSpawn} from "@jac-client/utils";';
-    return f"{jac_jsx_import}\n{js_code}";
+    jac_error_boundary_import = 'import { ErrorBoundary } from "react-error-boundary";';
+    return f"{jac_jsx_import}\n{jac_error_boundary_import}\n{js_code}";
 }
 
 """Extract client globals from manifest and module."""

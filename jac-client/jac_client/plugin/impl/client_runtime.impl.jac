@@ -175,3 +175,16 @@ impl __removeLocalStorage(key: str) -> None {
         storage.removeItem(key);
     }
 }
+cl import from "react-error-boundary" { ErrorBoundary } 
+impl ErrorFallback(error: str, resetErrorBoundary: any) -> any {
+    console.log("ErrorBoundary caught an error:", error);
+    return <div role="alert">
+        <h1>Something went wrong</h1>
+        <p>{error.error.message}</p>
+        <button 
+            label="Try again"
+            style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'}}
+            onClick={lambda -> None { error.resetErrorBoundary(); }}
+        />
+    </div>;
+}
