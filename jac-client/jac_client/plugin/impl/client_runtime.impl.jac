@@ -176,18 +176,15 @@ impl __removeLocalStorage(key: str) -> None {
     }
 }
 
-cl import from "react-error-boundary" { ErrorBoundary }
 impl ErrorFallback(error: str, resetErrorBoundary: any) -> any {
-    console.log("ErrorBoundary caught an error:", error);
-    return <div role="alert">
+    return <div role="alert"   style={{"padding": "2rem", "textAlign": "center", "fontFamily": "system-ui, -apple-system, sans-serif"}}>
         <h1>
             Something went wrong
         </h1>
-        <p>
+        <p style={{"color": "red"}}>
             {error.error.message}
         </p>
         <button
-            label="Try again"
             style={{
                 marginTop: '20px',
                 padding: '10px 20px',
@@ -198,6 +195,8 @@ impl ErrorFallback(error: str, resetErrorBoundary: any) -> any {
                 cursor: 'pointer'
             }}
             onClick={lambda -> None { error.resetErrorBoundary();}}
-        />
+        >
+            Try again
+        </button>
     </div>;
 }
