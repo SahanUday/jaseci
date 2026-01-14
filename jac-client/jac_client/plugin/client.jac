@@ -18,6 +18,45 @@ glob JsonValue: TypeAlias = None | str | int | float | bool | list['JsonValue'] 
      ],
      StatusCode: TypeAlias = Literal[(200, 201, 400, 401, 404, 503)];
 
+
+class HeaderBuilder {
+    def init(
+        self: HeaderBuilder,
+        meta_data: dict[(str, Any)],
+        function_name: str,
+        HEAD_SCHEMA: dict = {
+            "meta": {
+                "charset": {"attr": "charset", "dflt": "UTF-8"},
+                "viewport": {
+                    "name": "viewport",
+                    "dflt": "width=device-width, initial-scale=1"
+                },
+                "robots": {"name": "robots", "dflt": "index, follow"},
+                "theme_color": {"name": "theme-color", "dflt": "#ffffff"},
+                "description": {"name": "description", "dflt": None},
+
+            },
+            "title": True,
+            "og": {
+                "og_type": {"name": "type", "dflt": "website"},
+                "og_title": {"name": "title", "dflt": function_name},
+                "og_description": {"name": "description", "dflt": None},
+                "og_url": {"name": "url", "dflt": None},
+                "og_image": {"name": "image", "dflt": None},
+
+            },
+            "link": {
+                "canonical": {"rel": "canonical", "attr": "href", "dflt": None},
+                "icon": {"rel": "icon", "attr": "href", "dflt": None},
+
+            },
+
+        }
+    );
+
+    def build(self: HeaderBuilder) -> str ;
+}
+
 """Jac Client Module Introspector."""
 class JacClientModuleIntrospector(ModuleIntrospector) {
     def render_page(

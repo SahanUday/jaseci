@@ -130,86 +130,60 @@ impl JacClientModuleIntrospector.render_page(
         css_hash = hashlib.sha256(css_file.read_bytes()).hexdigest()[:8];
         css_link = f'<link rel="stylesheet" href="/static/main.css?hash={css_hash}"/>';
     }
-    HEAD_SCHEMA = {
-        "meta": {
-            "charset": {"attr": "charset", "dflt": "UTF-8"},
-            "viewport": {
-                "name": "viewport",
-                "dflt": "width=device-width, initial-scale=1"
-            },
-            "robots": {"name": "robots", "dflt": "index, follow"},
-            "theme_color": {"name": "theme-color", "dflt": "#ffffff"},
-            "description": {"name": "description", "dflt": None},
-
-        },
-        "title": True,
-        "og": {
-            "og_type": {"name": "type", "dflt": "website"},
-            "og_title": {"name": "title", "dflt": function_name},
-            "og_description": {"name": "description", "dflt": None},
-            "og_url": {"name": "url", "dflt": None},
-            "og_image": {"name": "image", "dflt": None},
-
-        },
-        "link": {
-            "canonical": {"rel": "canonical", "attr": "href", "dflt": None},
-            "icon": {"rel": "icon", "attr": "href", "dflt": None},
-
-        },
-
-    };
-    # Build head content
-    def build_head -> str {
-        lines: list = [];
-        # Meta tags
-        for (key, cfg) in HEAD_SCHEMA.get("meta", {}).items() {
-            val = meta_data.get(key, cfg["dflt"]);
-            if not val {
-                continue;
-            }
-            if "charset" in key {
-                lines.append(f'<meta charset="{html.escape(val)}"/>');
-            } else {
-                lines.append(
-                    f'<meta name="{cfg["name"]}" content="{html.escape(val)}"/>'
-                );
-            }
-        }
-        # Title
-        if HEAD_SCHEMA.get("title") and meta_data.get("title", function_name) {
-            lines.append(
-                f'<title>{html.escape(meta_data.get("title", function_name))}</title>'
-            );
-        }
-        # OpenGraph tags
-        for (key, og_name) in HEAD_SCHEMA.get("og", {}).items() {
-            val = meta_data.get(key, cfg["dflt"]);
-            if not val {
-                continue;
-            }
-            lines.append(
-                f'<meta property="og:{cfg["name"]}" content="{html.escape(val)}"/>'
-            );
-        }
-        # Link tags
-        for (key, cfg) in HEAD_SCHEMA.get("link", {}).items() {
-            val = meta_data.get(key, cfg["dflt"]);
-            if not val {
-                continue;
-            }
-            lines.append(
-                f'<link rel="{cfg["rel"]}" {cfg["attr"]}="{html.escape(val)}"/>'
-            );
-        }
-        return ("\n            ".join(lines));
-    }
     # Get meta data from config
     client_cfg = config.get_plugin_config("client") if config else None;
     meta_data = client_cfg.get("app_meta_data", {}) if client_cfg else {};
-    head_content = build_head();
+    head_builder = HeaderBuilder(meta_data, function_name);
+    head_content = head_builder.build();
     if css_link {
         head_content += f"\n            {css_link}";
     }
     page = f'<!DOCTYPE html><html lang="en"><head>{head_content}</head><body><div id="root"></div><script src="/static/client.js?hash={bundle_hash}" defer></script></body></html>';
     return {'html': page, 'bundle_hash': bundle_hash, 'bundle_code': self._bundle.code};
+}
+
+"""Header Builder for HTML pages."""
+impl HeaderBuilder.build_head(self: HeaderBuilder) -> str {
+    lines: list = [];
+    # Meta tags
+    for (key, cfg) in self.HEAD_SCHEMA.get("meta", {}).items() {
+        val = self.meta_data.get(key, cfg["dflt"]);
+        if not val {
+            continue;
+        }
+        if "charset" in key {
+            lines.append(f'<meta charset="{html.escape(val)}"/>');
+        } else {
+            lines.append(
+                f'<meta name="{cfg["name"]}" content="{html.escape(val)}"/>'
+            );
+        }
+    }
+    # Title
+    if self.HEAD_SCHEMA.get("title") and self.meta_data.get("title", self.function_name) {
+        lines.append(
+            f'<title>{html.escape(self.meta_data.get("title", self.function_name))}</title>'
+        );
+    }
+    # OpenGraph tags
+    for (key, og_name) in self.HEAD_SCHEMA.get("og", {}).items() {
+        val = self.meta_data.get(key, cfg["dflt"]);
+        if not val {
+            continue;
+        }
+        lines.append(
+            f'<meta property="og:{cfg["name"]}" content="{html.escape(val)}"/>'
+        );
+    }
+    # Link tags
+    for (key, cfg) in self.HEAD_SCHEMA.get("link", {}).items() {
+        val = self.meta_data.get(key, cfg["dflt"]);
+        if not val {
+            continue;
+        }
+        lines.append(
+            f'<link rel="{cfg["rel"]}" {cfg["attr"]}="{html.escape(val)}"/>'
+        );
+    }
+    return ("\n            ".join(lines));
 }
