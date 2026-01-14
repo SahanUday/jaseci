@@ -134,7 +134,7 @@ impl JacClientModuleIntrospector.render_page(
     client_cfg = config.get_plugin_config("client") if config else None;
     meta_data = client_cfg.get("app_meta_data", {}) if client_cfg else {};
     head_builder = HeaderBuilder(meta_data, function_name);
-    head_content = head_builder.build();
+    head_content = head_builder.build_head();
     if css_link {
         head_content += f"\n            {css_link}";
     }
@@ -186,4 +186,14 @@ impl HeaderBuilder.build_head(self: HeaderBuilder) -> str {
         );
     }
     return ("\n            ".join(lines));
+}
+
+"""Initialize Header Builder."""
+impl HeaderBuilder.init(
+    self: HeaderBuilder,
+    meta_data: dict,
+    function_name: str
+) {
+    self.meta_data = meta_data;
+    self.function_name = function_name;
 }
