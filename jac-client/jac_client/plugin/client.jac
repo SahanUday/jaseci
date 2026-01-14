@@ -23,41 +23,37 @@ class HeaderBuilder {
     with entry {
         HEAD_SCHEMA: dict = {
             "meta": {
-                "charset": {"attr":"charset","dflt":"UTF-8"},
+                "charset": {"attr": "charset", "dflt": "UTF-8"},
                 "viewport": {
-                    "name":"viewport",
-                    "dflt":"width=device-width,initial-scale=1"
+                    "name": "viewport",
+                    "dflt": "width=device-width,initial-scale=1"
                 },
-                "robots": {"name":"robots","dflt":"index,follow"},
-                "theme_color": {"name":"theme-color","dflt":"#ffffff"},
-                "description": {"name":"description","dflt":None},
+                "robots": {"name": "robots", "dflt": "index,follow"},
+                "theme_color": {"name": "theme-color", "dflt": "#ffffff"},
+                "description": {"name": "description", "dflt": None},
 
             },
             "title": True,
             "og": {
-                "og_type": {"name":"type","dflt":"website"},
-                "og_title": {"name":"title","dflt":None},
-                "og_description": {"name":"description","dflt":None},
-                "og_url": {"name":"url","dflt":None},
-                "og_image": {"name":"image","dflt":None},
+                "og_type": {"name": "type", "dflt": "website"},
+                "og_title": {"name": "title", "dflt": None},
+                "og_description": {"name": "description", "dflt": None},
+                "og_url": {"name": "url", "dflt": None},
+                "og_image": {"name": "image", "dflt": None},
 
             },
             "link": {
-                "canonical":{"rel":"canonical","attr":"href","dflt":None},
-                "icon": {"rel":"icon","attr":"href","dflt":None},
+                "canonical": {"rel": "canonical", "attr": "href", "dflt": None},
+                "icon": {"rel": "icon", "attr": "href", "dflt": None},
 
             },
 
-        }; 
+        };
     }
 
-    def init(
-        self: HeaderBuilder,
-        meta_data: dict,
-        function_name: str
-    );
+    def init(self: HeaderBuilder, meta_data: dict, function_name: str);
 
-    def build_head(self: HeaderBuilder) -> str ;
+    def build_head(self: HeaderBuilder) -> str;
 }
 
 """Jac Client Module Introspector."""

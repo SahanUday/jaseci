@@ -154,13 +154,12 @@ impl HeaderBuilder.build_head(self: HeaderBuilder) -> str {
         if "charset" in key {
             lines.append(f'<meta charset="{html.escape(val)}"/>');
         } else {
-            lines.append(
-                f'<meta name="{cfg["name"]}" content="{html.escape(val)}"/>'
-            );
+            lines.append(f'<meta name="{cfg["name"]}" content="{html.escape(val)}"/>');
         }
     }
     # Title
-    if self.HEAD_SCHEMA.get("title") and self.meta_data.get("title", self.function_name) {
+    if self.HEAD_SCHEMA.get("title")
+    and self.meta_data.get("title", self.function_name) {
         lines.append(
             f'<title>{html.escape(self.meta_data.get("title", self.function_name))}</title>'
         );
@@ -181,19 +180,13 @@ impl HeaderBuilder.build_head(self: HeaderBuilder) -> str {
         if not val {
             continue;
         }
-        lines.append(
-            f'<link rel="{cfg["rel"]}" {cfg["attr"]}="{html.escape(val)}"/>'
-        );
+        lines.append(f'<link rel="{cfg["rel"]}" {cfg["attr"]}="{html.escape(val)}"/>');
     }
     return ("\n            ".join(lines));
 }
 
 """Initialize Header Builder."""
-impl HeaderBuilder.init(
-    self: HeaderBuilder,
-    meta_data: dict,
-    function_name: str
-) {
+impl HeaderBuilder.init(self: HeaderBuilder, meta_data: dict, function_name: str) {
     self.meta_data = meta_data;
     self.function_name = function_name;
 }
