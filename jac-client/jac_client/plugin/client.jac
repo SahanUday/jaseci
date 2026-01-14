@@ -36,7 +36,7 @@ class HeaderBuilder {
             "title": True,
             "og": {
                 "og_type": {"name": "type", "dflt": "website"},
-                "og_title": {"name": "title", "dflt": function_name},
+                "og_title": {"name": "title", "dflt": None},
                 "og_description": {"name": "description", "dflt": None},
                 "og_url": {"name": "url", "dflt": None},
                 "og_image": {"name": "image", "dflt": None},
