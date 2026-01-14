@@ -85,7 +85,9 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                                 }
                             }
                             if len(overloaded_fns) > 1 {
-                                overloaded_ty = types.OverloadedType(overloaded_fns);
+                                overloaded_ty = types.OverloadedType(
+                                    overloads=overloaded_fns
+                                );
                             }
                         }
                         # NOTE: If this atom trailer is called `<atom_trailer>()` we can resolve
@@ -309,7 +311,9 @@ impl TypeEvaluator._get_type_of_expression_core(expr: uni.Expr) -> TypeBase {
                             }
                         }
                         if len(overloaded_fns) > 1 {
-                            overloaded_ty = types.OverloadedType(overloaded_fns);
+                            overloaded_ty = types.OverloadedType(
+                                overloads=overloaded_fns
+                            );
                         }
                         return overloaded_ty or symbol_type;
                     }
@@ -706,13 +710,13 @@ impl TypeEvaluator.get_index_of_symbol_resolution(symbol: uni.Symbol) -> int | N
 
 """Return the prefetched types for the type evaluator."""
 impl TypeEvaluator._prefetch_types{
-    get_types_type = lambda  type_name: str  -> types.TypeBase:
+    get_types_type = lambda type_name: str  -> types.TypeBase :
         self._get_type_from_module(self.types_module, type_name);
-    get_typing_type = lambda  type_name: str  -> types.TypeBase:
+    get_typing_type = lambda type_name: str  -> types.TypeBase :
         self._get_type_from_module(self.typing_module, type_name);
-    get_builtin_type = lambda  type_name: str  -> types.TypeBase:
+    get_builtin_type = lambda type_name: str  -> types.TypeBase :
         self._get_type_from_module(self.builtins_module, type_name);
-    get_jac_builtin_type = lambda  type_name: str  -> types.TypeBase:
+    get_jac_builtin_type = lambda type_name: str  -> types.TypeBase :
         self._get_type_from_module(self.jac_builtins_module, type_name);
     # TODO: Pyright first try load NoneType from typeshed and if it cannot
     # then it set to unknown type.
