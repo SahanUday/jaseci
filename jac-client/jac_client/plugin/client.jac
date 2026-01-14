@@ -52,7 +52,6 @@ class HeaderBuilder {
     }
 
     def init(self: HeaderBuilder, meta_data: dict, function_name: str);
-
     def build_head(self: HeaderBuilder) -> str;
 }
 
