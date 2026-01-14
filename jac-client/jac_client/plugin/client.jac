@@ -20,10 +20,7 @@ glob JsonValue: TypeAlias = None | str | int | float | bool | list['JsonValue'] 
 
 
 class HeaderBuilder {
-    def init(
-        self: HeaderBuilder,
-        meta_data: dict[(str, Any)],
-        function_name: str,
+    with entry {
         HEAD_SCHEMA: dict = {
             "meta": {
                 "charset": {"attr": "charset", "dflt": "UTF-8"},
@@ -51,7 +48,13 @@ class HeaderBuilder {
 
             },
 
-        }
+        }; 
+    }
+
+    def init(
+        self: HeaderBuilder,
+        meta_data: dict,
+        function_name: str
     );
 
     def build(self: HeaderBuilder) -> str ;
