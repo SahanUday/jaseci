@@ -23,7 +23,7 @@ obj HeaderBuilder {
 
     has meta_data: dict;
     has function_name: str;
-    has HEAD_SCHEMA: any = {
+    has HEAD_SCHEMA: dict = {
         "meta": {
             "charset": {"attr": "charset", "dflt": "UTF-8"},
             "viewport": {
