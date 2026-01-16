@@ -54,6 +54,7 @@ These fields are processed as standard `<meta name="..." content="...">` tags:
 | `og_site_name` | `og:site:name` | Name of the overall site |
 
 **Example conversion:**
+
 ```toml
 og_image_width = "1200"  # Becomes: <meta property="og:image:width" content="1200" />
 ```
@@ -66,7 +67,6 @@ og_image_width = "1200"  # Becomes: <meta property="og:image:width" content="120
 | `icon` | `icon` | Path to favicon file |
 | `apple_touch_icon` | `apple-touch-icon` | Apple touch icon for iOS devices |
 | `manifest` | `manifest` | Web app manifest file |
-
 
 ```toml
 link_preconnect = "https://fonts.googleapis.com"

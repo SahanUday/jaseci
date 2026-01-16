@@ -142,11 +142,10 @@ impl JacClient.render_page(
 """Build complete HTML head."""
 impl HeaderBuilder.build_head -> str {
     lines: list = [];
-
-    lines.extend(self._build_special_tags());       # charset, viewport, title
-    lines.extend(self._build_meta_tags());          # description, robots, etc
-    lines.extend(self._build_og_tags());            # Open Graph
-    lines.extend(self._build_link_tags());          # canonical, icon, etc
+    lines.extend(self._build_special_tags());  # charset, viewport, title
+    lines.extend(self._build_meta_tags());  # description, robots, etc
+    lines.extend(self._build_og_tags());  # Open Graph
+    lines.extend(self._build_link_tags());  # canonical, icon, etc
     lines.extend(self._build_generic_meta_tags());  # custom meta_* tags
     return "\n            ".join(lines);
 }

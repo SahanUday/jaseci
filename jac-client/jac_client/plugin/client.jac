@@ -26,8 +26,14 @@ obj HeaderBuilder {
             "charset": "UTF-8",
             "viewport": "width=device-width,initial-scale=1"
         },
-        standard_tags: list = ["description", "keywords", "author", "robots", "theme_color"];
-        
+        standard_tags: list = [
+            "description",
+            "keywords",
+            "author",
+            "robots",
+            "theme_color"
+        ];
+
     def build_head -> str;
     def _get_value(key: str) -> str;
     def _build_special_tags -> list[str];
