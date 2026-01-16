@@ -22,6 +22,10 @@ glob JsonValue: TypeAlias = None | str | int | float | bool | list['JsonValue'] 
 obj HeaderBuilder {
     has meta_data: dict,
         function_name: str,
+        DEFAULTS: dict = {
+            "charset": "UTF-8",
+            "viewport": "width=device-width,initial-scale=1"
+        },
         HEAD_SCHEMA: dict = {
             "meta": {
                 "charset": {"attr": "charset", "dflt": "UTF-8"},
@@ -52,6 +56,7 @@ obj HeaderBuilder {
         };
 
     def build_head -> str;
+    def _get_value(key: str) -> str;
     def _build_meta_tags -> list[str];
     def _build_og_tags -> list[str];
     def _build_link_tags -> list[str];
