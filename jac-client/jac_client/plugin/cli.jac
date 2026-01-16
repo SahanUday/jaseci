@@ -1,29 +1,25 @@
 """Command line interface tool for the Jac Client.
 
-This module extends the core `create` command to add client-side (frontend)
-project setup via the --cl flag using the extend_command API.
+This module extends the core `create` command to add the --cl flag for
+client-side (frontend) project setup. When --cl is used, it delegates to
+the core create command with template="client".
 """
 
 import os;
-import re;
 import sys;
-import pathlib;
-import subprocess;
-import shutil;
 import from jaclang.cli.registry { get_registry }
-import from jaclang.cli.command { Arg, ArgKind, HookContext }
+import from jaclang.cli.command { Arg, HookContext }
 import from jaclang.pycore.runtime { hookimpl }
-import from jaclang.project.config { find_project_root }
 
 """Jac CLI extensions for client-side development."""
 class JacCmd {
     """Create Jac CLI cmds."""
     @hookimpl
     static def create_cmd -> None {
-        """Extend core create command to add --cl flag for client-side setup.""";
+        """Extend core create command to add --cl and --skip flags for client-side setup.""";
         registry = get_registry();
 
-        # Extend the core 'create' command with client-specific arguments
+        # Extend the core 'create' command with --cl and --skip flags
         registry.extend_command(
             command_name="create",
             args=[
@@ -31,22 +27,15 @@ class JacCmd {
                     "cl",
                     typ=bool,
                     default=False,
-                    help="Include client-side (frontend) setup",
+                    help="Use the client template (shorthand for --template client)",
                     short="c"
                 ),
                 Arg.create(
                     "skip",
                     typ=bool,
                     default=False,
-                    help="Skip installing default packages (only for --cl)",
+                    help="Skip npm package installation after project creation",
                     short="s"
-                ),
-                Arg.create(
-                    "verbose",
-                    typ=bool,
-                    default=False,
-                    help="Show detailed output during installation",
-                    short="v"
                 ),
 
             ],
@@ -65,69 +54,47 @@ def _handle_client_create(ctx: HookContext) -> None {
         return;
     }
 
-    # Handle client-side project creation
-    cwd = pathlib.Path(os.getcwd());
-    name = ctx.get_arg("name", "main");
+    # Check if template is already set to something other than default
+    template = ctx.get_arg("template", "default");
+    if template != "default" {
+        # User explicitly set --template, respect that over --cl
+        return;
+    }
+
+    # --cl is set, delegate to core create with template="client"
+    # Use Python's importlib to import the compiled Jac module
+    import importlib;
+    project_module = importlib.import_module("jaclang.cli.commands.project");
+    create_fn = getattr(project_module, "create");
+
+    name = ctx.get_arg("name", "");
     force = ctx.get_arg("force", False);
+    list_templates = ctx.get_arg("list_templates", False);
     skip_install = ctx.get_arg("skip", False);
-    verbose = ctx.get_arg("verbose", False);
+
+    # Set environment variable to signal post_create hook to skip npm install
+    if skip_install {
+        os.environ["JAC_CLIENT_SKIP_NPM_INSTALL"] = "1";
+    }
 
     try {
-        _create_client_project(cwd, name, force, skip_install, verbose);
-        # Cancel core handler with success code
+        result = create_fn(
+            name=name, force=force, template="client", list_templates=list_templates
+        );
+        # Cancel core handler since we called create ourselves
         ctx.set_data("cancel_execution", True);
-        ctx.set_data("cancel_return_code", 0);
+        ctx.set_data("cancel_return_code", result if result is not None else 0);
     } except SystemExit as e {
-        # Preserve exit code from sys.exit() calls
         ctx.set_data("cancel_execution", True);
         ctx.set_data("cancel_return_code", e.code if e.code is not None else 1);
     } except Exception as e {
         print(f"Error creating client project: {e}", file=sys.stderr);
         ctx.set_data("cancel_execution", True);
         ctx.set_data("cancel_return_code", 1);
-    }
-}
-
-"""Create a client-side Jac project with organized folder structure."""
-def _create_client_project(
-    cwd: pathlib.Path,
-    name: str,
-    force: bool,
-    skip: bool = False,
-    verbose: bool = False
-) -> None {
-    project_name = name or cwd.name;
-
-    if not project_name or project_name == 'main' {
-        print(
-            "Error: Project name is required for client projects. Use: jac create --cl <name>",
-            file=sys.stderr
-        );
-        <>exit(1);
-    }
-
-    if not re.match('^[a-zA-Z0-9_-]+$', project_name) {
-        print(
-            "Error: Project name must contain only letters, numbers, hyphens, and underscores",
-            file=sys.stderr
-        );
-        <>exit(1);
-    }
-
-    existing = find_project_root(cwd);
-    if existing and not force {
-        (project_root, toml_path) = existing;
-        print(f"Already in a Jac project: {toml_path}", file=sys.stderr);
-        print("Use --force to reinitialize.", file=sys.stderr);
-        <>exit(1);
-    }
-
-    project_path: pathlib.Path;
-    if name and name != cwd.name {
-        project_path = cwd / name;
-        if project_path.exists() and not force {
-            print(f"Error: Directory '{name}' already exists", file=sys.stderr);
-            <>exit(1);
+    } finally {
+        # Clean up environment variable
+        if "JAC_CLIENT_SKIP_NPM_INSTALL" in os.environ {
+            del os.environ["JAC_CLIENT_SKIP_NPM_INSTALL"] ;
         }
         project_path.mkdir(parents=True, exist_ok=True);
     } else {
