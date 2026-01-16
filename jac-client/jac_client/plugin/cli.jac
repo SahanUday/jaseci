@@ -85,6 +85,10 @@ def _handle_client_create(ctx: HookContext) -> None {
         print(f"Error creating client project: {e}", file=sys.stderr);
         ctx.set_data("cancel_execution", True);
         ctx.set_data("cancel_return_code", 1);
+    } finally {
+        # Clean up environment variable
+        if "JAC_CLIENT_SKIP_NPM_INSTALL" in os.environ {
+            del os.environ["JAC_CLIENT_SKIP_NPM_INSTALL"] ;
     }
 }
 
