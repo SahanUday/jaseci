@@ -139,48 +139,97 @@ impl JacClient.render_page(
     };
 }
 
-"""Header meta_data for HTML pages."""
-impl HeaderBuilder._build_meta_tags -> list[str] {
+"""Build complete HTML head."""
+impl HeaderBuilder.build_head -> str {
     lines: list = [];
-    for (key, cfg) in self.HEAD_SCHEMA.get("meta", {}).items() {
-        val = self.meta_data.get(key, cfg["dflt"]);
-        if not val {
-            continue;
-        }
-        if "charset" in key {
-            lines.append(f'<meta charset="{html.escape(val)}"/>');
-        } else {
-            lines.append(f'<meta name="{cfg["name"]}" content="{html.escape(val)}"/>');
+    
+    # Order matters for SEO and browser parsing
+    lines.extend(self._build_special_tags());      # charset, viewport, title
+    lines.extend(self._build_meta_tags());          # description, robots, etc
+    lines.extend(self._build_og_tags());            # Open Graph
+    lines.extend(self._build_link_tags());          # canonical, icon, etc
+    lines.extend(self._build_generic_meta_tags());  # custom meta_* tags
+    
+    return "\n            ".join(lines);
+}
+
+"""Build generic meta tags (meta_* prefix for any custom metadata)."""
+impl HeaderBuilder._build_generic_meta_tags -> list[str] {
+    lines: list = [];
+    
+    for (key, val) in self.meta_data.items() {
+        if key.startswith("meta_") and val {
+            # meta_custom_field → name="custom-field"
+            name = key[5:].replace("_", "-");
+            lines.append(f'<meta name="{name}" content="{html.escape(str(val))}"/>');
         }
     }
+    
     return lines;
 }
 
-"""Header Open Graph tags for HTML pages."""
-impl HeaderBuilder._build_og_tags -> list[str] {
-    lines: list = [];
-    for (key, og_name) in self.HEAD_SCHEMA.get("og", {}).items() {
-        val = self.meta_data.get(key, og_name["dflt"]);
-        if not val {
-            continue;
-        }
-        lines.append(
-            f'<meta property="og:{og_name["name"]}" content="{html.escape(val)}"/>'
-        );
-    }
-    return lines;
-}
-
-"""Header Link tags for HTML pages."""
+"""Build link tags (link_* prefix or special cases)."""
 impl HeaderBuilder._build_link_tags -> list[str] {
     lines: list = [];
-    for (key, cfg) in self.HEAD_SCHEMA.get("link", {}).items() {
-        val = self.meta_data.get(key, cfg["dflt"]);
-        if not val {
-            continue;
+    
+    # Special link tags (common ones)
+    special_links = {
+        "canonical": "canonical",
+        "icon": "icon",
+        "apple_touch_icon": "apple-touch-icon",
+        "manifest": "manifest"
+    };
+    
+    for (key, rel) in special_links.items() {
+        if val := self._get_value(key) {
+            lines.append(f'<link rel={rel} href={html.escape(str(val))}/>');
         }
-        lines.append(f'<link rel="{cfg["rel"]}" {cfg["attr"]}="{html.escape(val)}"/>');
     }
+    
+    # Generic link_* prefix for custom links
+    for (key, val) in self.meta_data.items() {
+        if key.startswith("link_") and val {
+            # link_preconnect_google → rel="preconnect"
+            rel = key[5:].replace("_", "-");
+            lines.append(f'<link rel={rel} href={html.escape(str(val))} >');
+        }
+    }
+    
+    return lines;
+}
+
+"""Build Open Graph tags (og_* prefix)."""
+impl HeaderBuilder._build_og_tags -> list[str] {
+    lines: list = [];
+    
+    for (key, val) in self.meta_data.items() {
+        if key.startswith("og_") and val {
+            # og_title → og:title, og_image_width → og:image:width
+            property_name = key[3:].replace("_", ":");
+            lines.append(
+                f'<meta property="og:{property_name}" content="{html.escape(str(val))}"/>'
+            );
+        }
+    }
+    
+    return lines;
+}
+
+"""Build standard meta tags (description, robots, keywords, author, etc)."""
+impl HeaderBuilder._build_meta_tags -> list[str] {
+    lines: list = [];
+    
+    # Well-known meta tags (not prefixed)
+    standard_tags = ["description", "keywords", "author", "robots", "theme_color"];
+    
+    for key in standard_tags {
+        if val := self._get_value(key) {
+            # Convert underscore to dash (theme_color → theme-color)
+            name = key.replace("_", "-");
+            lines.append(f'<meta name={name} content={html.escape(str(val))} >');
+        }
+    }
+    
     return lines;
 }
 
@@ -208,20 +257,4 @@ impl HeaderBuilder._build_special_tags -> list[str] {
 """Get value with fallback to defaults."""
 impl HeaderBuilder._get_value(key: str) -> str {
     return self.meta_data.get(key) or self.DEFAULTS.get(key);
-}
-
-"""Header Builder for HTML pages."""
-impl HeaderBuilder.build_head -> str {
-    lines: list = [];
-    lines.extend(self._build_meta_tags());
-    # Title
-    if self.HEAD_SCHEMA.get("title")
-    and self.meta_data.get("title", self.function_name) {
-        lines.append(
-            f'<title>{html.escape(self.meta_data.get("title", self.function_name))}</title>'
-        );
-    }
-    lines.extend(self._build_og_tags());
-    lines.extend(self._build_link_tags());
-    return ("\n            ".join(lines));
 }

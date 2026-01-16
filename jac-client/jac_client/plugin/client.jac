@@ -25,41 +25,15 @@ obj HeaderBuilder {
         DEFAULTS: dict = {
             "charset": "UTF-8",
             "viewport": "width=device-width,initial-scale=1"
-        },
-        HEAD_SCHEMA: dict = {
-            "meta": {
-                "charset": {"attr": "charset", "dflt": "UTF-8"},
-                "viewport": {
-                    "name": "viewport",
-                    "dflt": "width=device-width,initial-scale=1"
-                },
-                "robots": {"name": "robots", "dflt": "index,follow"},
-                "theme_color": {"name": "theme-color", "dflt": "#ffffff"},
-                "description": {"name": "description", "dflt": None},
-
-            },
-            "title": True,
-            "og": {
-                "og_type": {"name": "type", "dflt": "website"},
-                "og_title": {"name": "title", "dflt": None},
-                "og_description": {"name": "description", "dflt": None},
-                "og_url": {"name": "url", "dflt": None},
-                "og_image": {"name": "image", "dflt": None},
-
-            },
-            "link": {
-                "canonical": {"rel": "canonical", "attr": "href", "dflt": None},
-                "icon": {"rel": "icon", "attr": "href", "dflt": None},
-
-            },
-
         };
 
     def build_head -> str;
     def _get_value(key: str) -> str;
+    def _build_special_tags -> list[str];
     def _build_meta_tags -> list[str];
     def _build_og_tags -> list[str];
     def _build_link_tags -> list[str];
+    def _build_generic_meta_tags -> list[str];
 }
 
 """Jac Client."""
