@@ -22,7 +22,7 @@ glob JsonValue: TypeAlias = None | str | int | float | bool | list['JsonValue'] 
 obj HeaderBuilder {
     has meta_data: dict,
         function_name: str,
-        HEAD_SCHEMA: any = {
+        HEAD_SCHEMA: dict = {
             "meta": {
                 "charset": {"attr": "charset", "dflt": "UTF-8"},
                 "viewport": {
