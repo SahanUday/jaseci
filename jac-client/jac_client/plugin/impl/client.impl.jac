@@ -142,21 +142,18 @@ impl JacClient.render_page(
 """Build complete HTML head."""
 impl HeaderBuilder.build_head -> str {
     lines: list = [];
-    
     # Order matters for SEO and browser parsing
-    lines.extend(self._build_special_tags());      # charset, viewport, title
-    lines.extend(self._build_meta_tags());          # description, robots, etc
-    lines.extend(self._build_og_tags());            # Open Graph
-    lines.extend(self._build_link_tags());          # canonical, icon, etc
+    lines.extend(self._build_special_tags());  # charset, viewport, title
+    lines.extend(self._build_meta_tags());  # description, robots, etc
+    lines.extend(self._build_og_tags());  # Open Graph
+    lines.extend(self._build_link_tags());  # canonical, icon, etc
     lines.extend(self._build_generic_meta_tags());  # custom meta_* tags
-    
     return "\n            ".join(lines);
 }
 
 """Build generic meta tags (meta_* prefix for any custom metadata)."""
 impl HeaderBuilder._build_generic_meta_tags -> list[str] {
     lines: list = [];
-    
     for (key, val) in self.meta_data.items() {
         if key.startswith("meta_") and val {
             # meta_custom_field → name="custom-field"
@@ -164,14 +161,12 @@ impl HeaderBuilder._build_generic_meta_tags -> list[str] {
             lines.append(f'<meta name="{name}" content="{html.escape(str(val))}"/>');
         }
     }
-    
     return lines;
 }
 
 """Build link tags (link_* prefix or special cases)."""
 impl HeaderBuilder._build_link_tags -> list[str] {
     lines: list = [];
-    
     # Special link tags (common ones)
     special_links = {
         "canonical": "canonical",
@@ -179,13 +174,11 @@ impl HeaderBuilder._build_link_tags -> list[str] {
         "apple_touch_icon": "apple-touch-icon",
         "manifest": "manifest"
     };
-    
     for (key, rel) in special_links.items() {
         if val := self._get_value(key) {
             lines.append(f'<link rel={rel} href={html.escape(str(val))}/>');
         }
     }
-    
     # Generic link_* prefix for custom links
     for (key, val) in self.meta_data.items() {
         if key.startswith("link_") and val {
@@ -194,14 +187,12 @@ impl HeaderBuilder._build_link_tags -> list[str] {
             lines.append(f'<link rel={rel} href={html.escape(str(val))} >');
         }
     }
-    
     return lines;
 }
 
 """Build Open Graph tags (og_* prefix)."""
 impl HeaderBuilder._build_og_tags -> list[str] {
     lines: list = [];
-    
     for (key, val) in self.meta_data.items() {
         if key.startswith("og_") and val {
             # og_title → og:title, og_image_width → og:image:width
@@ -211,17 +202,14 @@ impl HeaderBuilder._build_og_tags -> list[str] {
             );
         }
     }
-    
     return lines;
 }
 
 """Build standard meta tags (description, robots, keywords, author, etc)."""
 impl HeaderBuilder._build_meta_tags -> list[str] {
     lines: list = [];
-    
     # Well-known meta tags (not prefixed)
     standard_tags = ["description", "keywords", "author", "robots", "theme_color"];
-    
     for key in standard_tags {
         if val := self._get_value(key) {
             # Convert underscore to dash (theme_color → theme-color)
@@ -229,28 +217,23 @@ impl HeaderBuilder._build_meta_tags -> list[str] {
             lines.append(f'<meta name={name} content={html.escape(str(val))} >');
         }
     }
-    
     return lines;
 }
 
 """Build special tags (charset, viewport, title)."""
 impl HeaderBuilder._build_special_tags -> list[str] {
     lines: list = [];
-    
     # Charset
     if charset := self._get_value("charset") {
         lines.append(f'<meta charset="{html.escape(charset)}"/>');
     }
-    
     # Viewport
     if viewport := self._get_value("viewport") {
         lines.append(f'<meta name="viewport" content="{html.escape(viewport)}"/>');
     }
-    
     # Title
     title = self._get_value("title") or self.function_name;
     lines.append(f'<title>{html.escape(title)}</title>');
-    
     return lines;
 }
 
