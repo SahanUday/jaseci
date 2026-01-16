@@ -184,6 +184,32 @@ impl HeaderBuilder._build_link_tags -> list[str] {
     return lines;
 }
 
+"""Build special tags (charset, viewport, title)."""
+impl HeaderBuilder._build_special_tags -> list[str] {
+    lines: list = [];
+    
+    # Charset
+    if charset := self._get_value("charset") {
+        lines.append(f'<meta charset="{html.escape(charset)}"/>');
+    }
+    
+    # Viewport
+    if viewport := self._get_value("viewport") {
+        lines.append(f'<meta name="viewport" content="{html.escape(viewport)}"/>');
+    }
+    
+    # Title
+    title = self._get_value("title") or self.function_name;
+    lines.append(f'<title>{html.escape(title)}</title>');
+    
+    return lines;
+}
+
+"""Get value with fallback to defaults."""
+impl HeaderBuilder._get_value(key: str) -> str {
+    return self.meta_data.get(key) or self.DEFAULTS.get(key);
+}
+
 """Header Builder for HTML pages."""
 impl HeaderBuilder.build_head -> str {
     lines: list = [];
