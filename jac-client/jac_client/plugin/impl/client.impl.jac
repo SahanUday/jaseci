@@ -140,7 +140,7 @@ impl JacClient.render_page(
 }
 
 """Header meta_data for HTML pages."""
-impl HeaderBuilder._build_meta_tags(self: HeaderBuilder) -> list[str] {
+impl HeaderBuilder._build_meta_tags() -> list[str] {
     lines: list = [];
     for (key, cfg) in self.HEAD_SCHEMA.get("meta", {}).items() {
         val = self.meta_data.get(key, cfg["dflt"]);
@@ -157,7 +157,7 @@ impl HeaderBuilder._build_meta_tags(self: HeaderBuilder) -> list[str] {
 }
 
 """Header Open Graph tags for HTML pages."""
-impl HeaderBuilder._build_og_tags(self: HeaderBuilder) -> list[str] {
+impl HeaderBuilder._build_og_tags() -> list[str] {
     lines: list = [];
     for (key, og_name) in self.HEAD_SCHEMA.get("og", {}).items() {
         val = self.meta_data.get(key, og_name["dflt"]);
@@ -172,7 +172,7 @@ impl HeaderBuilder._build_og_tags(self: HeaderBuilder) -> list[str] {
 }
 
 """Header Link tags for HTML pages."""
-impl HeaderBuilder._build_link_tags(self: HeaderBuilder) -> list[str] {
+impl HeaderBuilder._build_link_tags() -> list[str] {
     lines: list = [];
     for (key, cfg) in self.HEAD_SCHEMA.get("link", {}).items() {
         val = self.meta_data.get(key, cfg["dflt"]);
@@ -185,7 +185,7 @@ impl HeaderBuilder._build_link_tags(self: HeaderBuilder) -> list[str] {
 }
 
 """Header Builder for HTML pages."""
-impl HeaderBuilder.build_head(self: HeaderBuilder) -> str {
+impl HeaderBuilder.build_head() -> str {
     lines: list = [];
     lines.extend(self._build_meta_tags());
     # Title
@@ -198,10 +198,4 @@ impl HeaderBuilder.build_head(self: HeaderBuilder) -> str {
     lines.extend(self._build_og_tags());
     lines.extend(self._build_link_tags());
     return ("\n            ".join(lines));
-}
-
-"""Initialize Header Builder."""
-impl HeaderBuilder.init(self: HeaderBuilder, meta_data: dict, function_name: str) {
-    self.meta_data = meta_data;
-    self.function_name = function_name;
 }

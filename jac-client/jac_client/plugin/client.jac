@@ -19,43 +19,43 @@ glob JsonValue: TypeAlias = None | str | int | float | bool | list['JsonValue'] 
      StatusCode: TypeAlias = Literal[(200, 201, 400, 401, 404, 503)];
 
 """Builds HTML head content from meta data."""
-class HeaderBuilder {
-    with entry {
-        HEAD_SCHEMA: dict = {
-            "meta": {
-                "charset": {"attr": "charset", "dflt": "UTF-8"},
-                "viewport": {
-                    "name": "viewport",
-                    "dflt": "width=device-width,initial-scale=1"
-                },
-                "robots": {"name": "robots", "dflt": "index,follow"},
-                "theme_color": {"name": "theme-color", "dflt": "#ffffff"},
-                "description": {"name": "description", "dflt": None},
+obj HeaderBuilder {
 
+    has meta_data: dict;
+    has function_name: str;
+    has HEAD_SCHEMA: any = {
+        "meta": {
+            "charset": {"attr": "charset", "dflt": "UTF-8"},
+            "viewport": {
+                "name": "viewport",
+                "dflt": "width=device-width,initial-scale=1"
             },
-            "title": True,
-            "og": {
-                "og_type": {"name": "type", "dflt": "website"},
-                "og_title": {"name": "title", "dflt": None},
-                "og_description": {"name": "description", "dflt": None},
-                "og_url": {"name": "url", "dflt": None},
-                "og_image": {"name": "image", "dflt": None},
+            "robots": {"name": "robots", "dflt": "index,follow"},
+            "theme_color": {"name": "theme-color", "dflt": "#ffffff"},
+            "description": {"name": "description", "dflt": None},
 
-            },
-            "link": {
-                "canonical": {"rel": "canonical", "attr": "href", "dflt": None},
-                "icon": {"rel": "icon", "attr": "href", "dflt": None},
+        },
+        "title": True,
+        "og": {
+            "og_type": {"name": "type", "dflt": "website"},
+            "og_title": {"name": "title", "dflt": None},
+            "og_description": {"name": "description", "dflt": None},
+            "og_url": {"name": "url", "dflt": None},
+            "og_image": {"name": "image", "dflt": None},
 
-            },
+        },
+        "link": {
+            "canonical": {"rel": "canonical", "attr": "href", "dflt": None},
+            "icon": {"rel": "icon", "attr": "href", "dflt": None},
 
-        };
-    }
+        },
 
-    def init(self: HeaderBuilder, meta_data: dict, function_name: str);
-    def build_head(self: HeaderBuilder) -> str;
-    def _build_meta_tags(self: HeaderBuilder) -> list[str];
-    def _build_og_tags(self: HeaderBuilder) -> list[str];
-    def _build_link_tags(self: HeaderBuilder) -> list[str];
+    };
+
+    def build_head() -> str;
+    def _build_meta_tags() -> list[str];
+    def _build_og_tags() -> list[str];
+    def _build_link_tags() -> list[str];
 }
 
 """Jac Client."""
