@@ -76,14 +76,17 @@ class JacClient {
     ) -> ClientBundle;
 
     @hookimpl
-    static def get_module_introspector(
-        module_name: str, base_path: (str | None)
-    ) -> ModuleIntrospector;
-
-    @hookimpl
     static def send_static_file(
         handler: BaseHTTPRequestHandler,
         file_path: Path,
         content_type: (str | None) = None
     ) -> None;
+
+    @hookimpl
+    static def render_page(
+        introspector: ModuleIntrospector,
+        function_name: str,
+        args: dict[(str, Any)],
+        username: str
+    ) -> dict[str, Any];
 }
