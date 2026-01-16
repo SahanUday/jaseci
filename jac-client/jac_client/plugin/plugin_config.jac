@@ -102,7 +102,7 @@ class JacClientPluginConfig {
                     "entry-point": "main.jac"
                 },
                 "dependencies": {},
-                "dependencies.npm": {"jac-client-node": "1.0.3"},
+                "dependencies.npm": {"jac-client-node": "1.0.4"},
                 "dependencies.npm.dev": {"@jac-client/dev-deps": "1.0.0"},
                 "dev-dependencies": {"watchdog": ">=3.0.0"},
                 "serve": {"base_route_app": "app"},
