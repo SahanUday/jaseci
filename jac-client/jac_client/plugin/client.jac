@@ -53,16 +53,9 @@ class HeaderBuilder {
 
     def init(self: HeaderBuilder, meta_data: dict, function_name: str);
     def build_head(self: HeaderBuilder) -> str;
-}
-
-"""Jac Client Module Introspector."""
-class JacClientModuleIntrospector(ModuleIntrospector) {
-    def render_page(
-        self: JacClientModuleIntrospector,
-        function_name: str,
-        args: dict[(str, Any)],
-        username: str
-    ) -> dict[str, Any];
+    def _build_meta_tags(self: HeaderBuilder) -> list[str];
+    def _build_og_tags(self: HeaderBuilder) -> list[str];
+    def _build_link_tags(self: HeaderBuilder) -> list[str];
 }
 
 """Jac Client."""

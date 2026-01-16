@@ -139,10 +139,9 @@ impl JacClient.render_page(
     };
 }
 
-"""Header Builder for HTML pages."""
-impl HeaderBuilder.build_head(self: HeaderBuilder) -> str {
+"""Header meta_data for HTML pages."""
+impl HeaderBuilder._build_meta_tags(self: HeaderBuilder) -> list[str] {
     lines: list = [];
-    # Meta tags
     for (key, cfg) in self.HEAD_SCHEMA.get("meta", {}).items() {
         val = self.meta_data.get(key, cfg["dflt"]);
         if not val {
@@ -154,24 +153,27 @@ impl HeaderBuilder.build_head(self: HeaderBuilder) -> str {
             lines.append(f'<meta name="{cfg["name"]}" content="{html.escape(val)}"/>');
         }
     }
-    # Title
-    if self.HEAD_SCHEMA.get("title")
-    and self.meta_data.get("title", self.function_name) {
-        lines.append(
-            f'<title>{html.escape(self.meta_data.get("title", self.function_name))}</title>'
-        );
-    }
-    # OpenGraph tags
+    return lines;
+}
+
+"""Header Open Graph tags for HTML pages."""
+impl HeaderBuilder._build_og_tags(self: HeaderBuilder) -> list[str] {
+    lines: list = [];
     for (key, og_name) in self.HEAD_SCHEMA.get("og", {}).items() {
-        val = self.meta_data.get(key, cfg["dflt"]);
+        val = self.meta_data.get(key, og_name["dflt"]);
         if not val {
             continue;
         }
         lines.append(
-            f'<meta property="og:{cfg["name"]}" content="{html.escape(val)}"/>'
+            f'<meta property="og:{og_name["name"]}" content="{html.escape(val)}"/>'
         );
     }
-    # Link tags
+    return lines;
+}
+
+"""Header Link tags for HTML pages."""
+impl HeaderBuilder._build_link_tags(self: HeaderBuilder) -> list[str] {
+    lines: list = [];
     for (key, cfg) in self.HEAD_SCHEMA.get("link", {}).items() {
         val = self.meta_data.get(key, cfg["dflt"]);
         if not val {
@@ -179,6 +181,22 @@ impl HeaderBuilder.build_head(self: HeaderBuilder) -> str {
         }
         lines.append(f'<link rel="{cfg["rel"]}" {cfg["attr"]}="{html.escape(val)}"/>');
     }
+    return lines;
+}
+
+"""Header Builder for HTML pages."""
+impl HeaderBuilder.build_head(self: HeaderBuilder) -> str {
+    lines: list = [];
+    lines.extend(self._build_meta_tags());
+    # Title
+    if self.HEAD_SCHEMA.get("title")
+    and self.meta_data.get("title", self.function_name) {
+        lines.append(
+            f'<title>{html.escape(self.meta_data.get("title", self.function_name))}</title>'
+        );
+    }
+    lines.extend(self._build_og_tags());
+    lines.extend(self._build_link_tags());
     return ("\n            ".join(lines));
 }
 
