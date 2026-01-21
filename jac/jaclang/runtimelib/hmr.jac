@@ -52,4 +52,7 @@ obj HotReloader {
 
     """Convert a .jac file path to a .js filename."""
     def _get_js_filename(file_path: str) -> str;
+
+    """Copy frontend files to compiled directory."""
+    def _copy_frontend_files(file_path: str) -> None;
 }

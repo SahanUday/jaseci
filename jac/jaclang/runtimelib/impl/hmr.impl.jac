@@ -49,6 +49,11 @@ impl HotReloader.on_file_change(event: Any) -> None {
 
 """Process a file change by classifying declarations and taking action."""
 impl HotReloader._process_change(file_path: str) -> None {
+    # Check if this is a .tsx file
+    if file_path.endswith(tuple(p[1:] if p.startswith("*") else p for p in self.watcher.additional_patterns)) {
+        self._copy_tsx_file(file_path);
+        return;
+    }
     # Check if file has client and/or server declarations
     (has_client, has_server) = self._classify_declarations(file_path);
     # Handle server declarations - reload in sys.modules
@@ -265,4 +270,27 @@ impl HotReloader._path_to_module(file_path: str) -> str {
         }
     }
     return ".".join(module_parts);
+}
+
+"""Copy frontend files to compiled directory."""
+impl HotReloader._copy_frontend_files(file_path: str) -> None {    
+    try {
+        source_path = Path(file_path).resolve();
+        base_dir = Path(self.base_path).resolve();
+        try {
+            rel_path = source_path.relative_to(base_dir);
+        } except ValueError {
+            rel_path = source_path.name;
+        }
+        output_base = Path(self.base_path) / self._client_output_dir;
+        output_path = output_base / rel_path;
+        output_path.parent.mkdir(parents=True, exist_ok=True);
+        try {
+            ts_code = source_path.read_text(encoding='utf-8');
+            output_path.write_text(ts_code, encoding='utf-8');
+        } except (FileNotFoundError, OSError) { }
+        print(f"[HMR] Copied frontend file: {file_path} -> {output_path}", flush=True);
+    } except Exception as e {
+        print(f"[HMR] Error copying frontend file {file_path}: {e}", flush=True);
+    }
 }
