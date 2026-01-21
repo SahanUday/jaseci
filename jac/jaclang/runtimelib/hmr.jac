@@ -59,5 +59,4 @@ obj HotReloader {
 
     """Emit a client-side error overlay for compilation errors."""
     def _emit_client_error_overlay(file_path: str, errors: str) -> None;
-
 }

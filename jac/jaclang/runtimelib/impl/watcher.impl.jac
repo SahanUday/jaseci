@@ -97,7 +97,6 @@ impl JacFileWatcher._on_change(path: str, change_type: ChangeType) -> None {
     if '/.jac/' in path or '\\.jac\\' in path {
         return;
     }
-
     # Only process .jac files
     if not self._matches_pattern(path) {
         return;

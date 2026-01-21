@@ -291,7 +291,7 @@ impl HotReloader._path_to_module(file_path: str) -> str {
 
 
 """Copy frontend files to compiled directory."""
-impl HotReloader._copy_frontend_files(file_path: str) -> None {    
+impl HotReloader._copy_frontend_files(file_path: str) -> None {
     try {
         source_path = Path(file_path).resolve();
         base_dir = Path(self.base_path).resolve();
