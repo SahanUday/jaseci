@@ -133,7 +133,7 @@ impl JacFileWatcher._debounce_flush -> None {
 impl JacFileWatcher._matches_pattern(path: str) -> bool {
     filename = Path(path).name;
     # *.jac matches both .jac and .cl.jac since .cl.jac ends with .jac
-     if fnmatch.fnmatch(filename, self.pattern) {
+    if fnmatch.fnmatch(filename, self.pattern) {
         return True;
     }
     # Check additional patterns (e.g., .tsx)
