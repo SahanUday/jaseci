@@ -317,9 +317,32 @@ impl HotReloader._copy_frontend_files(file_path: str) -> None {
         }
         output_base = Path(self.base_path) / self._client_output_dir;
         output_path = output_base / rel_path;
-        output_path.parent.mkdir(parents=True, exist_ok=True);
+
+        # Check if source file exists (handle deletion)
+        if not source_path.exists() {
+            # File was deleted - remove from build directory
+            if output_path.exists() {
+                output_path.unlink();
+                print(f"[HMR] Removed deleted frontend file: {rel_path}", flush=True);
+            }
+            self._emit_client_error_overlay(file_path, f"No module in {rel_path}");
+            return;
+        }
         try {
+            # If there were previous errors, we need to update the entry point
+            if self._overlay_entry {
+                output_dir = output_base;
+                output_dir.mkdir(parents=True, exist_ok=True);
+                js_filename = "_entry.js";
+                entry_path = output_dir / js_filename;
+                entry_content = f'import React from "react";\nimport {{ createRoot }} from "react-dom/client";\nimport {{ app as App }} from "./{self.module_name}.js";\nimport {{ JacClientErrorBoundary, ErrorFallback }} from "@jac-client/utils";\n\nconst root = createRoot(document.getElementById("root"));\nroot.render(\n\tReact.createElement(\n\t\tJacClientErrorBoundary,{{ FallbackComponent: ErrorFallback }},\n\t\tReact.createElement(App, null)\n\t)\n);\n';
+                entry_path.write_text(entry_content, encoding='utf-8');
+                print(f"[HMR] Update entry: {entry_path}", flush=True);
+                self._overlay_entry = False;
+            }
+
             ts_code = source_path.read_text(encoding='utf-8');
+            output_path.parent.mkdir(parents=True, exist_ok=True);
             output_path.write_text(ts_code, encoding='utf-8');
         } except (FileNotFoundError, OSError) { }
         print(f"[HMR] Copied frontend file: {file_path} -> {output_path}", flush=True);
