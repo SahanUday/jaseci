@@ -149,13 +149,7 @@ impl HotReloader._recompile_client_code(file_path: str) -> None {
 
         # If there were previous errors, we need to update the entry point
         if self._overlay_entry {
-            output_base = Path(self.base_path) / self._client_output_dir;
-            output_base.mkdir(parents=True, exist_ok=True);
-            output_path = output_base / "_entry.js";
-            entry_content = f'import React from "react";\nimport {{ createRoot }} from "react-dom/client";\nimport {{ app as App }} from "./{self.module_name}.js";\nimport {{ JacClientErrorBoundary, ErrorFallback }} from "@jac-client/utils";\n\nconst root = createRoot(document.getElementById("root"));\nroot.render(\n\tReact.createElement(\n\t\tJacClientErrorBoundary,{{ FallbackComponent: ErrorFallback }},\n\t\tReact.createElement(App, null)\n\t)\n);\n';
-            output_path.write_text(entry_content, encoding='utf-8');
-            print(f"[HMR] Update entry: {output_path}", flush=True);
-            self._overlay_entry = False;
+            self._update_entry_point();
         }
 
         # Get the generated JS code
@@ -333,12 +327,7 @@ impl HotReloader._copy_frontend_files(file_path: str) -> None {
         try {
             # If there were previous errors, we need to update the entry point
             if self._overlay_entry {
-                output_base.mkdir(parents=True, exist_ok=True);
-                entry_path = output_base / "_entry.js";
-                entry_content = f'import React from "react";\nimport {{ createRoot }} from "react-dom/client";\nimport {{ app as App }} from "./{self.module_name}.js";\nimport {{ JacClientErrorBoundary, ErrorFallback }} from "@jac-client/utils";\n\nconst root = createRoot(document.getElementById("root"));\nroot.render(\n\tReact.createElement(\n\t\tJacClientErrorBoundary,{{ FallbackComponent: ErrorFallback }},\n\t\tReact.createElement(App, null)\n\t)\n);\n';
-                entry_path.write_text(entry_content, encoding='utf-8');
-                print(f"[HMR] Update entry: {entry_path}", flush=True);
-                self._overlay_entry = False;
+                self._update_entry_point();
             }
             ts_code = source_path.read_text(encoding='utf-8');
             output_path.parent.mkdir(parents=True, exist_ok=True);
@@ -348,4 +337,15 @@ impl HotReloader._copy_frontend_files(file_path: str) -> None {
     } except Exception as e {
         print(f"[HMR] Error copying frontend file {file_path}: {e}", flush=True);
     }
+}
+
+"""Update the entry point to reflect changes in modules."""
+impl HotReloader._update_entry_point() -> None {
+    output_base = Path(self.base_path) / self._client_output_dir;
+    output_base.mkdir(parents=True, exist_ok=True);
+    output_path = output_base / "_entry.js";
+    entry_content = f'import React from "react";\nimport {{ createRoot }} from "react-dom/client";\nimport {{ app as App }} from "./{self.module_name}.js";\nimport {{ JacClientErrorBoundary, ErrorFallback }} from "@jac-client/utils";\n\nconst root = createRoot(document.getElementById("root"));\nroot.render(\n\tReact.createElement(\n\t\tJacClientErrorBoundary,{{ FallbackComponent: ErrorFallback }},\n\t\tReact.createElement(App, null)\n\t)\n);\n';
+    output_path.write_text(entry_content, encoding='utf-8');
+    print(f"[HMR] Update entry: {output_path}", flush=True);
+    self._overlay_entry = False;
 }

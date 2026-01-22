@@ -132,17 +132,8 @@ impl JacFileWatcher._debounce_flush -> None {
 """Internal: Check if a path matches the watch pattern."""
 impl JacFileWatcher._matches_pattern(path: str) -> bool {
     filename = Path(path).name;
-    # *.jac matches both .jac and .cl.jac since .cl.jac ends with .jac
-    if fnmatch.fnmatch(filename, self.pattern) {
-        return True;
-    }
-    # Check additional patterns (e.g., .tsx)
-    for pattern in self.additional_patterns {
-        if fnmatch.fnmatch(filename, pattern) {
-            return True;
-        }
-    }
-    return False;
+    patterns = (self.pattern, *self.additional_patterns);
+    return any(fnmatch.fnmatch(filename, p) for p in patterns);
 }
 
 """Internal: Notify all callbacks of an event."""
