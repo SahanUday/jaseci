@@ -340,7 +340,7 @@ impl HotReloader._copy_frontend_files(file_path: str) -> None {
 }
 
 """Update the entry point to reflect changes in modules."""
-impl HotReloader._update_entry_point() -> None {
+impl HotReloader._update_entry_point -> None {
     output_base = Path(self.base_path) / self._client_output_dir;
     output_base.mkdir(parents=True, exist_ok=True);
     output_path = output_base / "_entry.js";

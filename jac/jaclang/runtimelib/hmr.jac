@@ -61,5 +61,5 @@ obj HotReloader {
     def _copy_frontend_files(file_path: str) -> None;
 
     """Update the entry point to reflect changes in modules."""
-    def _update_entry_point() -> None;
+    def _update_entry_point -> None;
 }
