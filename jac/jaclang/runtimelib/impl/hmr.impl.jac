@@ -20,9 +20,9 @@ impl HotReloader.start -> None {
     }
     # Register our callback with the watcher
     self.watcher.add_callback(self.on_file_change);
+    self._running = True;
     # Start watching
     self.watcher.start();
-    self._running = True;
     logger.debug(f"Hot reloader started for module: {self.module_name}");
 }
 
