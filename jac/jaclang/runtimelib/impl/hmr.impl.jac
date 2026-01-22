@@ -50,7 +50,11 @@ impl HotReloader.on_file_change(event: Any) -> None {
 """Process a file change by classifying declarations and taking action."""
 impl HotReloader._process_change(file_path: str) -> None {
     # Check if this is a frontend file
-    if file_path.endswith(tuple(p[1:] if p.startswith("*") else p for p in self.watcher.additional_patterns)) {
+    if file_path.endswith(
+        tuple(
+            p[1:] if p.startswith("*") else p for p in self.watcher.additional_patterns
+        )
+    ) {
         self._copy_frontend_files(file_path);
         return;
     }
