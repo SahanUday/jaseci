@@ -93,7 +93,11 @@ impl JacFileWatcher.remove_callback(
 
 """Internal: Handle a file change event from watchdog."""
 impl JacFileWatcher._on_change(path: str, change_type: ChangeType) -> None {
-    # Only process .jac files
+    # Ignore files in .jac directory to prevent infinite loops
+    if '/.jac/' in path or '\\.jac\\' in path {
+        return;
+    }
+    # Only process .jac files and additional patterns
     if not self._matches_pattern(path) {
         return;
     }
@@ -129,7 +133,16 @@ impl JacFileWatcher._debounce_flush -> None {
 impl JacFileWatcher._matches_pattern(path: str) -> bool {
     filename = Path(path).name;
     # *.jac matches both .jac and .cl.jac since .cl.jac ends with .jac
-    return fnmatch.fnmatch(filename, self.pattern);
+     if fnmatch.fnmatch(filename, self.pattern) {
+        return True;
+    }
+    # Check additional patterns (e.g., .tsx)
+    for pattern in self.additional_patterns {
+        if fnmatch.fnmatch(filename, pattern) {
+            return True;
+        }
+    }
+    return False;
 }
 
 """Internal: Notify all callbacks of an event."""
