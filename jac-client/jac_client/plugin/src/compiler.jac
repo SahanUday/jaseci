@@ -64,7 +64,7 @@ class ViteCompiler {
         self: ViteCompiler, module: ModuleType, module_path: Path
     ) -> tuple[str, str, list[str], list[str]];
 
-    def compile_only(
+    def compile(
         self: ViteCompiler, module: ModuleType, module_path: Path
     ) -> tuple[list[str], list[str]];
 }

@@ -13,7 +13,7 @@ impl ViteCompiler._get_client_dir(self: ViteCompiler) -> Path {
 }
 
 """Compile module and dependencies without bundling (for dev mode)."""
-impl ViteCompiler.compile_only(
+impl ViteCompiler.compile(
     self: ViteCompiler, module: ModuleType, module_path: Path
 ) -> tuple[list[str], list[str]] {
     (module_js, mod, module_manifest) = self.jac_compiler.compile_module(module_path);
@@ -42,29 +42,12 @@ impl ViteCompiler.compile_only(
 impl ViteCompiler.compile_and_bundle(
     self: ViteCompiler, module: ModuleType, module_path: Path
 ) -> tuple[str, str, list[str], list[str]] {
-    (module_js, mod, module_manifest) = self.jac_compiler.compile_module(module_path);
-    collected_exports: set[str] = set(
-        self.jac_compiler.extract_exports(module_manifest)
-    );
-    client_globals_map = self.jac_compiler.extract_globals(module_manifest, module);
-    collected_globals: dict[(str, Any)] = dict(client_globals_map);
-    self.compile_dependencies_recursively(
-        module_path,
-        collected_exports=collected_exports,
-        collected_globals=collected_globals
-    );
-    # Compile runtime AFTER dependencies so it overwrites any dependency-compiled
-    # version of client_runtime.js with the proper ES module exports
-    self.compile_runtime_utils();
-    self.copy_root_assets();
-    self.create_entry_file(module_path);
+    (client_exports, client_globals) = self.compile(module, module_path);
     # Vite handles JSX/TSX transpilation natively with Bun - no Babel needed
     # Vite builds directly from compiled/ directory
     entry_file = self.compiled_dir / '_entry.js';
     self.vite_bundler.build(entry_file=entry_file);
     (bundle_code, bundle_hash) = self.vite_bundler.read_bundle();
-    client_exports = sorted(collected_exports);
-    client_globals = list(collected_globals.keys());
     return (bundle_code, bundle_hash, client_exports, client_globals);
 }
 

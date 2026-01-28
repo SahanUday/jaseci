@@ -275,7 +275,7 @@ impl start(
             # Do initial compilation for HMR
             try {
                 compiler = server.introspector._bundle_builder._get_compiler();
-                compiler.compile_only(server.introspector._module, Path(filename));
+                compiler.compile(server.introspector._module, Path(filename));
                 print("  ✔ Initial client compilation completed", flush=True);
             } except Exception as e {
                 print(f"Warning: Initial client compilation failed: {e}", file=sys.stderr, flush=True);
