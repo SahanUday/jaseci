@@ -34,7 +34,15 @@ class TestJacFileWatcher:
         assert watcher is not None
         assert watcher.watch_paths == [str(temp_dir)]
         assert watcher.pattern == "*.jac"
-        assert watcher.additional_patterns == ["*.tsx", "*.js", "*.css", "*.scss", "*.png", "*.jpg", "*.jpeg"]
+        assert watcher.additional_patterns == [
+            "*.tsx",
+            "*.js",
+            "*.css",
+            "*.scss",
+            "*.png",
+            "*.jpg",
+            "*.jpeg",
+        ]
         assert watcher._running is False
 
     def test_pattern_matches_jac_files(self, temp_dir: Path) -> None:
