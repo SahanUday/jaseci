@@ -278,7 +278,11 @@ impl start(
                 compiler.compile(server.introspector._module, Path(filename));
                 print("  ✔ Initial client compilation completed", flush=True);
             } except Exception as e {
-                print(f"Warning: Initial client compilation failed: {e}", file=sys.stderr, flush=True);
+                print(
+                    f"Warning: Initial client compilation failed: {e}",
+                    file=sys.stderr,
+                    flush=True
+                );
             }
             vite_process = _start_vite_dev_server(base, vite_port, actual_api_port);
         }
