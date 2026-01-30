@@ -6,6 +6,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 - **ES Module Export Generation**: Exports now generated at compiler level via ESTree nodes instead of regex post-processing. Only `:pub` declarations are exported.
 - **Hot fix: call state**: Normal spawn calls inside API spawn calls supported.
+- **Enhanced Client Compilation for Development**: Improved the `jac start --dev` command to perform initial client compilation for Hot Module Replacement (HMR) support, providing faster development feedback and better dev server integration.
 
 ## jaclang 0.9.12 (Latest Release)
 
