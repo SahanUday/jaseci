@@ -1023,7 +1023,9 @@ def test_start_dev_with_client_does_initial_compilation() -> None:
                 text=True,
             )
             install_stdout, install_stderr = install_process.communicate()
-            assert install_process.returncode == 0, f"jac install --dev failed: {install_stderr}"
+            assert install_process.returncode == 0, (
+                f"jac install --dev failed: {install_stderr}"
+            )
 
             # Run jac start --dev main.jac
             process = Popen(
@@ -1069,7 +1071,9 @@ def test_start_dev_with_client_does_initial_compilation() -> None:
             if process.stderr:
                 process.stderr.close()
 
-            assert found_message, f"Expected 'Initial client compilation completed' in output, but got: {output}"
+            assert found_message, (
+                f"Expected 'Initial client compilation completed' in output, but got: {output}"
+            )
 
         finally:
             os.chdir(original_cwd)
