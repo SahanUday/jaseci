@@ -4,6 +4,8 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## jac-client 0.2.13 (Unreleased)
 
+- **HMR Enhancements**: Added initial module compilation without bundling for HMR.
+
 ## jac-client 0.2.12 (Latest Release)
 
 - **Configurable API Base URL**: Added `[plugins.client.api]` config section with `base_url` option. By default (empty), API calls use same-origin relative URLs. Set `base_url = "http://localhost:8000"` for cross-origin setups.
