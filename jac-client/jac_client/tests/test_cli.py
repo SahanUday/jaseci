@@ -1040,6 +1040,8 @@ def test_start_dev_with_client_does_initial_compilation() -> None:
             while time.time() - start_time < 30:  # 30 seconds timeout
                 if process.poll() is not None:
                     break
+                if process.stdout is None:
+                    break
                 line = process.stdout.readline()
                 if not line:
                     time.sleep(0.1)
@@ -1053,7 +1055,7 @@ def test_start_dev_with_client_does_initial_compilation() -> None:
             process.terminate()
             try:
                 process.wait(timeout=5)
-            except:
+            except Exception:
                 process.kill()
 
             # Read any remaining output
