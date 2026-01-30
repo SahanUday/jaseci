@@ -4,7 +4,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## jac-client 0.2.13 (Unreleased)
 
-- **Enhanced Compilation for Hot Module Replacement**: Added initial module compilation for HMR without bundling, enabling faster initial compilation during development.
+- **Enhanced Compilation for Hot Module Replacement**: Added initial module compilation for HMR without bundling'.
 
 ## jac-client 0.2.12 (Latest Release)
 

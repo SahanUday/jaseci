@@ -995,12 +995,10 @@ def test_start_dev_with_client_does_initial_compilation() -> None:
     import time
 
     test_project_name = "test-start-dev-client"
-
     with tempfile.TemporaryDirectory() as temp_dir:
         original_cwd = os.getcwd()
         try:
             os.chdir(temp_dir)
-
             # Create a client project
             process = Popen(
                 ["jac", "create", "--use", "client", test_project_name],
@@ -1011,10 +1009,8 @@ def test_start_dev_with_client_does_initial_compilation() -> None:
             )
             stdout, stderr = process.communicate()
             assert process.returncode == 0
-
             # Change to project directory
             os.chdir(test_project_name)
-
             # Install dependencies
             install_process = Popen(
                 ["jac", "install", "--dev"],
@@ -1026,7 +1022,6 @@ def test_start_dev_with_client_does_initial_compilation() -> None:
             assert install_process.returncode == 0, (
                 f"jac install --dev failed: {install_stderr}"
             )
-
             # Run jac start --dev main.jac
             process = Popen(
                 ["jac", "start", "--dev", "main.jac"],
@@ -1034,7 +1029,6 @@ def test_start_dev_with_client_does_initial_compilation() -> None:
                 stderr=PIPE,
                 text=True,
             )
-
             # Wait for the initial compilation message or timeout
             start_time = time.time()
             output = ""
@@ -1052,28 +1046,19 @@ def test_start_dev_with_client_does_initial_compilation() -> None:
                 if "Initial client compilation completed" in output:
                     found_message = True
                     break
-
             # Terminate the process
             process.terminate()
             try:
                 process.wait(timeout=5)
             except Exception:
                 process.kill()
-
-            # Read any remaining output
-            remaining_stdout, remaining_stderr = process.communicate()
-            output += remaining_stdout or ""
-            output += remaining_stderr or ""
-
             # Close pipes
             if process.stdout:
                 process.stdout.close()
             if process.stderr:
                 process.stderr.close()
-
             assert found_message, (
                 f"Expected 'Initial client compilation completed' in output, but got: {output}"
             )
-
         finally:
             os.chdir(original_cwd)
