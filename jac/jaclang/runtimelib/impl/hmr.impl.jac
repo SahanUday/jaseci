@@ -281,15 +281,22 @@ impl HotReloader._path_to_module(file_path: str) -> str {
     # Remove .jac extension and convert path separators to dots
     module_parts = [];
     for part in rel_path.parts {
-        if part.endswith(".jac") {
-            module_parts.append(part[:-4]);
-        } elif part.endswith(".impl.jac") {
-            module_parts.append(part[:-9]);
+        # Strip Jac extensions
+        if part.endswith(".impl.jac") {
+            part_name = part[:-9];
         } elif part.endswith(".cl.jac") {
-            module_parts.append(part[:-7]);
+            part_name = part[:-7];
+        } elif part.endswith(".sv.jac") {
+            part_name = part[:-7];
+        } elif part.endswith(".jac") {
+            part_name = part[:-4];
         } else {
-            module_parts.append(part);
+            part_name = part;
         }
+        # Replace remaining dots with underscores to avoid module hierarchy confusion
+        # e.g., "endpoints.na" -> "endpoints_na" (single module, not package.submodule)
+        part_name = part_name.replace(".", "_");
+        module_parts.append(part_name);
     }
     return ".".join(module_parts);
 }
