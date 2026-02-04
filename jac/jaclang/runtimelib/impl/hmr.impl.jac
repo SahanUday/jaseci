@@ -77,17 +77,14 @@ impl HotReloader._reload_server_module(file_path: str) -> None {
     import from jaclang.pycore.runtime { JacRuntime as Jac }
     # Get module name from file path
     module_name = self._path_to_module(file_path);
-    
     # Determine if we need to also reload the main entry point
     reload_main = module_name != self.module_name;
-    
     # Remove changed module and its submodules from sys.modules
     modules_to_remove = [
         name
         for name in sys.modules.keys()
         if name == module_name or name.startswith(f"{module_name}.")
     ];
-    
     # If reloading main module as well, add it to the removal list
     if reload_main and self.module_name in sys.modules {
         modules_to_remove.append(self.module_name);
@@ -108,7 +105,7 @@ impl HotReloader._reload_server_module(file_path: str) -> None {
         # If reloading main module, also clear it from hub
         if reload_main {
             main_mod = sys.modules.get(self.module_name);
-            if main_mod and hasattr(main_mod, '__file__') {
+            if main_mod and main_mod?.__file__ {
                 main_path = str(Path(main_mod.__file__).resolve());
                 if main_path in Jac.program.mod.hub {
                     del Jac.program.mod.hub[main_path];
@@ -133,7 +130,6 @@ impl HotReloader._reload_server_module(file_path: str) -> None {
         } else {
             console.print(f"[HMR] Reloaded: {file_path}");
         }
-
     } except SyntaxError as e {
         # Syntax error during reload
         line_info = f" (line {e.lineno})" if e?.lineno and e.lineno else "";
