@@ -4,7 +4,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## jaclang 0.9.16 (Unreleased)
 
-- **HMR Server-Side Fixes**: Added dependent module reloading so when sub-modules change, the main entry point is also reloaded to refresh imports. 
+- **HMR Server-Side Fixes**: Added dependent module reloading so when sub-modules change, the main entry point is also reloaded to refresh imports.
 
 ## jaclang 0.9.15 (Latest Release)
 
