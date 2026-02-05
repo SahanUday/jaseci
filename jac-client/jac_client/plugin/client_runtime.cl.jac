@@ -15,6 +15,7 @@ import from 'react-router-dom' {
     useParams as reactRouterUseParams
 }
 import from 'react-error-boundary' { ErrorBoundary }
+import from 'react-hook-form' { useForm }
 
 def:pub __jacJsx(tag: any, props: dict = {}, children: any = []) -> JsxElement;
 
@@ -31,7 +32,8 @@ glob:
      useLocation = reactRouterUseLocation,
      useParams = reactRouterUseParams,
      Outlet = ReactRouterOutlet,
-     JacClientErrorBoundary = ErrorBoundary;
+     JacClientErrorBoundary = ErrorBoundary,
+     useJacForm = useForm(mode = "onTouched",);
 
 def:pub useRouter -> dict;
 def:pub navigate(path: str) -> None;
