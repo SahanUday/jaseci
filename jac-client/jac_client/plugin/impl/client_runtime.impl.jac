@@ -369,3 +369,7 @@ impl errorOverlay(filePath: str, errors: str) -> any {
         </div>
     );
 }
+
+impl useJacForm() -> any {
+    return useForm(mode = "onTouched",);
+}

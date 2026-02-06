@@ -32,8 +32,7 @@ glob:
      useLocation = reactRouterUseLocation,
      useParams = reactRouterUseParams,
      Outlet = ReactRouterOutlet,
-     JacClientErrorBoundary = ErrorBoundary,
-     useJacForm = useForm(mode = "onTouched",);
+     JacClientErrorBoundary = ErrorBoundary;
 
 def:pub useRouter -> dict;
 def:pub navigate(path: str) -> None;
@@ -51,3 +50,4 @@ def:pub __removeLocalStorage(key: str) -> None;
 def:pub AuthGuard(redirect: str = "/login") -> any;
 def:pub ErrorFallback(error: str, resetErrorBoundary: any) -> any;
 def:pub errorOverlay(filePath: str, errors: str) -> any;
+def:pub useJacForm() -> any;
