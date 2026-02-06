@@ -370,6 +370,6 @@ impl errorOverlay(filePath: str, errors: str) -> any {
     );
 }
 
-impl useJacForm() -> any {
-    return useForm(mode = "onTouched",);
+impl useJacForm(schema: any) -> any {
+    return useForm(mode = "onTouched", resolver = zodResolver(schema));
 }

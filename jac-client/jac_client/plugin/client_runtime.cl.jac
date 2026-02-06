@@ -16,6 +16,8 @@ import from 'react-router-dom' {
 }
 import from 'react-error-boundary' { ErrorBoundary }
 import from 'react-hook-form' { useForm }
+import from '@hookform/resolvers/zod' { zodResolver }
+import from 'zod' { z }
 
 def:pub __jacJsx(tag: any, props: dict = {}, children: any = []) -> JsxElement;
 
@@ -32,7 +34,8 @@ glob:
      useLocation = reactRouterUseLocation,
      useParams = reactRouterUseParams,
      Outlet = ReactRouterOutlet,
-     JacClientErrorBoundary = ErrorBoundary;
+     JacClientErrorBoundary = ErrorBoundary,
+     jacSchema = z;
 
 def:pub useRouter -> dict;
 def:pub navigate(path: str) -> None;
@@ -50,4 +53,4 @@ def:pub __removeLocalStorage(key: str) -> None;
 def:pub AuthGuard(redirect: str = "/login") -> any;
 def:pub ErrorFallback(error: str, resetErrorBoundary: any) -> any;
 def:pub errorOverlay(filePath: str, errors: str) -> any;
-def:pub useJacForm() -> any;
+def:pub useJacForm(schema: any) -> any;
