@@ -81,7 +81,7 @@ cl{
                 </p>
 
                 <form onSubmit={form.handleSubmit(handleSubmit)}>
-                
+
                     <div style={{"marginBottom": "1.5rem"}}>
                         <label style={{
                             "display": "block",
@@ -120,7 +120,7 @@ cl{
                         </p>}
                     </div>
 
-                    
+
                     <div style={{"marginBottom": "1.5rem"}}>
                         <label style={{
                             "display": "block",
@@ -132,7 +132,7 @@ cl{
                             Password
                         </label>
                         <input
-                            type={"text" if showPassword else "password"} 
+                            type={"text" if showPassword else "password"}
                             placeholder="Minimum 8 characters"
                             {...password_field}
                             style={{
@@ -147,7 +147,7 @@ cl{
                                 "fontFamily": "system-ui, -apple-system, sans-serif"
                             }}
                         />
-                        {getStrength(password_value)} 
+                        {getStrength(password_value)}
                         {errors.password && <p style={{
                             "color": "#ef4444",
                             "fontSize": "0.85rem",
@@ -165,7 +165,7 @@ cl{
                         }}>
                             Must include: uppercase, lowercase, number, and special character
                         </p>
-              
+
                         <label style={{"cursor": "pointer"}}>
                             <input
                                 type="checkbox"
@@ -214,7 +214,7 @@ cl{
                             {errors.confirmPassword.message}
                         </p>}
                     </div>
-                   
+
                     <button
                         type="submit"
                         disabled={isSubmitting || not isDirty}
@@ -228,7 +228,7 @@ cl{
                             "fontSize": "1rem",
                             "fontWeight": "600",
                             "cursor": ("pointer" if not (isSubmitting or not isDirty) else "not-allowed"),
-                            textDecoration: "none", 
+                            textDecoration: "none",
                             "transition": "background-color 0.3s"
                         }}>
                         Create Account

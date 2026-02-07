@@ -119,6 +119,7 @@ Navigate to the served application to see the forms in action. The app includes 
 ## Form Components Overview
 
 ### SignupForm (`SignupForm.cl.jac`)
+
 - Email and password fields
 - Password strength indicator
 - Password confirmation matching
@@ -126,6 +127,7 @@ Navigate to the served application to see the forms in action. The app includes 
 - Real-time validation feedback
 
 ### RegForm (`RegForm.cl.jac`)
+
 - Comprehensive user registration
 - Multiple field types (text, phone, address, etc.)
 - Complex validation rules
@@ -134,6 +136,7 @@ Navigate to the served application to see the forms in action. The app includes 
 - Accessibility features
 
 ### Schema (`components/Schema.jac`)
+
 - Reusable Zod validation schemas
 - Custom validation rules
 - Cross-field validation (password matching)

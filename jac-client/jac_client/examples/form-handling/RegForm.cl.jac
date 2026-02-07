@@ -122,7 +122,7 @@ def:pub RegForm(onSuccess: any) -> JsxElement {
             </p>
 
             <form onSubmit={form.handleSubmit(handleSubmit)}>
-               
+
                 <div style={{
                     "marginBottom": "2rem",
                     "paddingBottom": "1.5rem",
@@ -146,7 +146,7 @@ def:pub RegForm(onSuccess: any) -> JsxElement {
                     {renderTextField("Phone Number", phone_field, errors.phone, "+1 (555) 000-0000")}
                 </div>
 
-             
+
                 <div style={{
                     "marginBottom": "2rem",
                     "paddingBottom": "1.5rem",
@@ -163,7 +163,7 @@ def:pub RegForm(onSuccess: any) -> JsxElement {
                     {renderTextField("Company Name", companyName_field, errors.companyName, "Acme Corp", "Leave blank if not applicable")}
                 </div>
 
-              
+
                 <div style={{
                     "marginBottom": "2rem",
                     "paddingBottom": "1.5rem",
@@ -191,7 +191,7 @@ def:pub RegForm(onSuccess: any) -> JsxElement {
                     </div>
                 </div>
 
-           
+
                 <div style={{
                     "marginBottom": "2rem",
                     "paddingBottom": "1.5rem",
@@ -292,7 +292,7 @@ def:pub RegForm(onSuccess: any) -> JsxElement {
                     )}
                 </div>
 
-               
+
                 <div style={{"marginBottom": "2rem"}}>
                     <div style={{
                         "marginBottom": "1rem",
@@ -357,7 +357,7 @@ def:pub RegForm(onSuccess: any) -> JsxElement {
                     </label>
                 </div>
 
-              
+
                 <button
                     type="submit"
                     disabled={isSubmitting || not isValid}

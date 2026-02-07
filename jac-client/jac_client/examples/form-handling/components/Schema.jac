@@ -14,11 +14,11 @@ cl {
             })
             .refine(lambda data:any -> bool{return data.password == data.confirmPassword;}, {
                 message: "Passwords do not match",
-                path: ["confirmPassword"], 
+                path: ["confirmPassword"],
             });
             return signupSchema;
     }
-    
+
     def:pub RegisterSchema -> any {
         # Define comprehensive validation schema
         registrationSchema = jacSchema.object({
