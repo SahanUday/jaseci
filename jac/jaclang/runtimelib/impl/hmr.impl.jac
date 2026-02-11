@@ -51,6 +51,8 @@ impl HotReloader.on_file_change(event: Any) -> None {
 
 """Process a file change by classifying declarations and taking action."""
 impl HotReloader._process_change(file_path: str) -> None {
+    import from jaclang.jac0core.bccache { discover_base_file }
+    
     # Check if this is a frontend file
     if file_path.endswith(
         tuple(
@@ -60,45 +62,74 @@ impl HotReloader._process_change(file_path: str) -> None {
         self._copy_frontend_files(file_path);
         return;
     }
+    
+    # Handle .impl.jac files specially - they need to trigger base file recompilation
+    if file_path.endswith('.impl.jac') {
+        base_file = discover_base_file(file_path);
+        if not base_file {
+            console.print(f"[HMR] Warning: Could not find base file for {file_path}");
+            # Fall back to regular server reload
+            self._reload_server_module(file_path);
+            return;
+        }
+        console.print(f"[HMR] Impl file changed: {file_path} -> base: {base_file}");
+        # Reload with base file context
+        self._reload_server_module(file_path, base_file);
+        return;
+    }
+    
     # Check if file has client and/or server declarations
     (has_client, has_server) = self._classify_declarations(file_path);
     # Handle server declarations - reload in sys.modules
     if has_server {
         self._reload_server_module(file_path);
     }
-    # Handle client declarations - recompile to JS (Phase 2)
+    # Handle client declarations - recompile to JS
     if has_client {
-        self._recompile_client_code(file_path);
+        self._recompile_client_code(file_path, skip_hub_check=True);
     }
 }
 
-"""Reload server-side module in sys.modules."""
-impl HotReloader._reload_server_module(file_path: str) -> None {
+"""Clear modules from sys.modules and hub cache."""
+impl HotReloader._clear_modules_from_cache(file_paths: list[str]) -> None {
     import from jaclang.jac0core.runtime { JacRuntime as Jac }
-    # Remove all project modules from sys.modules to refresh the full import chain
+    # Remove all project modules from sys.modules
     sys.modules.pop(self.module_name, None);
     for key in list(Jac.program.mod.hub.keys()) {
         sys.modules.pop(self._path_to_module(key), None);
     }
-    # Also remove from the program's module hub
-    try {
+    
+    # Clear specific file paths from the hub
+    for file_path in file_paths {
         if file_path in Jac.program.mod.hub {
             del Jac.program.mod.hub[file_path];
+            console.print(f"[HMR] Cleared hub entry: {file_path}");
         }
         # Also try with resolved path
-        resolved_path = str(Path(file_path).resolve());
-        if resolved_path in Jac.program.mod.hub {
-            del Jac.program.mod.hub[resolved_path];
-        }
-    } except Exception as e {
-        console.print(f"[HMR] Warning: Could not clear module hub: {e}");
+        try {
+            resolved_path = str(Path(file_path).resolve());
+            if resolved_path in Jac.program.mod.hub {
+                del Jac.program.mod.hub[resolved_path];
+                console.print(f"[HMR] Cleared hub entry: {resolved_path}");
+            }
+        } except Exception { }
     }
-    # Re-import with force reload
+}
+
+"""Perform module reload with comprehensive error handling."""
+impl HotReloader._perform_reload_with_error_handling(file_path: str, success_msg: str | None = None) -> bool {
+    import from jaclang.jac0core.runtime { JacRuntime as Jac }
+    
     try {
         Jac.jac_import(
             target=self.module_name, base_path=self.base_path, reload_module=True
         );
-        console.print(f"[HMR] Reloaded: {file_path}");
+        if success_msg {
+            console.print(success_msg);
+        } else {
+            console.print(f"[HMR] Reloaded: {file_path}");
+        }
+        return True;
     } except SyntaxError as e {
         # Syntax error during reload
         line_info = f" (line {e.lineno})" if e?.lineno and e.lineno else "";
@@ -106,36 +137,84 @@ impl HotReloader._reload_server_module(file_path: str) -> None {
             f"[HMR] Syntax error reloading {file_path}{line_info}: {e?.msg or str(e)}"
         );
         console.print(f"[HMR] Fix the error and save to retry");
+        return False;
     } except ImportError as e {
         # Import error (missing dependency, etc.)
         console.print(f"[HMR] Import error reloading {file_path}: {e}");
         self._emit_client_error_overlay(file_path, str(e));
+        return False;
     } except Exception as e {
         # Other errors
         error_type = type(e).__name__;
         console.print(f"[HMR] {error_type} reloading {file_path}: {e}");
         self._emit_client_error_overlay(file_path, str(e));
+        return False;
+    }
+}
+
+"""Reload server-side module in sys.modules."""
+impl HotReloader._reload_server_module(file_path: str, base_file: str | None = None) -> None {
+    import from jaclang.jac0core.runtime { JacRuntime as Jac }
+    
+    # Determine which files to clear from cache
+    if base_file {
+        # Impl file case: clear both impl and base files
+        resolved_impl = str(Path(file_path).resolve());
+        resolved_base = str(Path(base_file).resolve());
+        files_to_clear = [file_path, resolved_impl, base_file, resolved_base];
+        
+        # Check if base file has client declarations before reloading
+        (has_client, has_server) = self._classify_declarations(base_file);
+    } else {
+        # Regular file case: clear only the file itself
+        files_to_clear = [file_path];
+        has_client = False;
+    }
+    
+    # Clear modules from cache
+    self._clear_modules_from_cache(files_to_clear);
+    
+    # Perform reload with error handling
+    if base_file {
+        success_msg = f"[HMR] Reloaded impl file: {file_path}\n[HMR] Recompiled base file: {base_file}";
+    } else {
+        success_msg = None;
+    }
+    
+    reload_success = self._perform_reload_with_error_handling(file_path, success_msg);
+    
+    # If base file has client code and reload succeeded, write JS from already-compiled module
+    if reload_success and base_file and has_client {
+        console.print(f"[HMR] Base file has client code, writing JS to disk...");
+        self._recompile_client_code(base_file, skip_hub_check=False);
     }
 }
 
 """Recompile client declarations to JavaScript."""
-impl HotReloader._recompile_client_code(file_path: str) -> None {
+impl HotReloader._recompile_client_code(file_path: str, skip_hub_check: bool = False) -> None {
     import from jaclang.jac0core.runtime { JacRuntime as Jac }
+    
     try {
         source_path = Path(file_path).resolve();
         source_key = str(source_path);
-
-        # Clear any stale errors from previous compilations (important for test isolation)
-        Jac.program.errors_had.clear();
-
-        # Clear existing module from hub to force recompilation
-        if source_key in Jac.program.mod.hub {
-            del Jac.program.mod.hub[source_key];
+        
+        # Try to use already-compiled module from hub first (avoids recompilation)
+        if not skip_hub_check and source_key in Jac.program.mod.hub {
+            console.print(f"[HMR] Using cached module from hub: {file_path}");
+            mod = Jac.program.mod.hub[source_key];
+        } else {
+            # Clear any stale errors from previous compilations
+            Jac.program.errors_had.clear();
+            
+            # Clear existing module from hub to force recompilation
+            if source_key in Jac.program.mod.hub {
+                del Jac.program.mod.hub[source_key];
+            }
+            
+            # Compile the file (this generates JS as part of the compilation)
+            mod = Jac.program.compile(source_key);
         }
-
-        # Compile the file (this generates JS as part of the compilation)
-        mod = Jac.program.compile(source_key);
-
+        
         # Check for compilation errors
         if Jac.program.errors_had {
             errors = '\n'.join(str(err) for err in Jac.program.errors_had);
@@ -144,60 +223,70 @@ impl HotReloader._recompile_client_code(file_path: str) -> None {
             Jac.program.errors_had.clear();
             return;
         }
-
-        # If there were previous errors, we need to update the entry point
+        
+        # If there were previous errors, update the entry point
         if self._overlay_entry {
             self._update_entry_point();
         }
-
+        
         # Get the generated JS code
         js_code = mod.gen.js or '';
-
+        
         if not js_code {
             console.print(f"[HMR] No client JS generated for {file_path}");
             return;
         }
-
-        # Ensure __jacJsx import is present (required for client-side rendering)
-        jac_runtime_import = 'import {__jacJsx, __jacSpawn} from "@jac/runtime";';
-        if '__jacJsx' in js_code and jac_runtime_import not in js_code {
-            # Add import at the beginning of the file
-            js_code = jac_runtime_import + '\n' + js_code;
-        }
-
-        # Preserve directory structure: components/AuthForm.cl.jac -> components/AuthForm.js
-        base_dir = Path(self.base_path).resolve();
-        source_dir = source_path.parent;
-        try {
-            # Get the relative path from base_path to source file's directory
-            rel_dir = source_dir.relative_to(base_dir);
-        } except ValueError {
-            # File is not under base_path, put in root
-            rel_dir = Path('.');
-        }
-
-        # Build output path preserving directory structure
-        output_base = Path(self.base_path) / self._client_output_dir;
-        output_dir = output_base / rel_dir;
-        output_dir.mkdir(parents=True, exist_ok=True);
-
-        # Generate output filename (foo.jac -> foo.js, foo.cl.jac -> foo.js)
-        js_filename = self._get_js_filename(file_path);
-        output_path = output_dir / js_filename;
-
-        # Handle exports: extract from manifest and add comprehensive export statement
+        
+        # Get client manifest for exports
         client_manifest = mod.gen.client_manifest if mod else None;
-        if client_manifest {
-            js_code = self._create_export_statement(js_code, client_manifest);
-        }
-
-        # Write the JS code
-        output_path.write_text(js_code, encoding='utf-8');
-
-        console.print(f"[HMR] Recompiled client: {file_path} -> {output_path}");
+        
+        # Write JS to disk
+        self._write_client_js_to_disk(file_path, js_code, client_manifest);
+        
+        console.print(f"[HMR] Recompiled client: {file_path}");
     } except Exception as e {
         console.print(f"[HMR] Error recompiling client code {file_path}: {e}");
     }
+}
+
+"""Write generated JS code to disk."""
+impl HotReloader._write_client_js_to_disk(file_path: str, js_code: str, client_manifest: Any) -> None {
+    source_path = Path(file_path).resolve();
+    
+    # Ensure __jacJsx import is present (required for client-side rendering)
+    jac_runtime_import = 'import {__jacJsx, __jacSpawn} from "@jac/runtime";';
+    if '__jacJsx' in js_code and jac_runtime_import not in js_code {
+        # Add import at the beginning of the file
+        js_code = jac_runtime_import + '\n' + js_code;
+    }
+    
+    # Preserve directory structure: components/AuthForm.cl.jac -> components/AuthForm.js
+    base_dir = Path(self.base_path).resolve();
+    source_dir = source_path.parent;
+    try {
+        # Get the relative path from base_path to source file's directory
+        rel_dir = source_dir.relative_to(base_dir);
+    } except ValueError {
+        # File is not under base_path, put in root
+        rel_dir = Path('.');
+    }
+    
+    # Build output path preserving directory structure
+    output_base = Path(self.base_path) / self._client_output_dir;
+    output_dir = output_base / rel_dir;
+    output_dir.mkdir(parents=True, exist_ok=True);
+    
+    # Generate output filename (foo.jac -> foo.js, foo.cl.jac -> foo.js)
+    js_filename = self._get_js_filename(file_path);
+    output_path = output_dir / js_filename;
+    
+    # Handle exports: extract from manifest and add comprehensive export statement
+    if client_manifest {
+        js_code = self._create_export_statement(js_code, client_manifest);
+    }
+    
+    # Write the JS code
+    output_path.write_text(js_code, encoding='utf-8');
 }
 
 """Convert a .jac file path to a .js filename."""
