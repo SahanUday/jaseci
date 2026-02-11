@@ -190,7 +190,7 @@ description = "Desktop test app"
 entry-point = "main.jac"
 
 [dependencies.npm]
-jac-client-node = "1.0.4"
+jac-client-node = "1.0.7"
 
 [dependencies.npm.dev]
 "@jac-client/dev-deps" = "1.0.0"
