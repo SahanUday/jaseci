@@ -53,4 +53,4 @@ def:pub __removeLocalStorage(key: str) -> None;
 def:pub AuthGuard(redirect: str = "/login") -> any;
 def:pub ErrorFallback(error: str, resetErrorBoundary: any) -> any;
 def:pub errorOverlay(filePath: str, errors: str) -> any;
-def:pub useJacForm(form_mode:str = "onTouched", schema: any) -> any;
+def:pub useJacForm(form_mode: str = "onTouched", schema: any) -> any;

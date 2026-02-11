@@ -368,6 +368,6 @@ impl errorOverlay(filePath: str, errors: str) -> any {
     );
 }
 
-impl useJacForm(form_mode:str, schema: any) -> any {
-    return useForm(mode = form_mode, resolver = zodResolver(schema));
+impl useJacForm(form_mode: str, schema: any) -> any {
+    return useForm(mode=form_mode, resolver=zodResolver(schema));
 }
