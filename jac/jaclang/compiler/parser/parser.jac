@@ -11,20 +11,20 @@ import from .tokens { Token, TokenKind, SourceLoc }
 import from .lexer { Lexer, LexerError }
 
 # Import unitree classes from Python
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree {
     UniNode,
     Token as UniToken,
     Expr
 }
-import from jaclang.pycore.unitree { Name, String, Int, Float, Bool, Null }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree { Name, String, Int, Float, Bool, Null }
+import from jaclang.jac0core.unitree {
     Ellipsis as EllipsisLit,
     BuiltinType,
     SpecialVarRef,
     EmptyToken,
     Semi
 }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree {
     Module,
     Source,
     GlobalVars,
@@ -32,10 +32,10 @@ import from jaclang.pycore.unitree {
     ModuleCode,
     PyInlineCode
 }
-import from jaclang.pycore.unitree { ClientBlock, ServerBlock }
-import from jaclang.pycore.unitree { Import, ModulePath, ModuleItem }
-import from jaclang.pycore.unitree { Archetype, Ability, Enum, ImplDef, SemDef }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree { ClientBlock, ServerBlock }
+import from jaclang.jac0core.unitree { Import, ModulePath, ModuleItem }
+import from jaclang.jac0core.unitree { Archetype, Ability, Enum, ImplDef, SemDef }
+import from jaclang.jac0core.unitree {
     ArchHas,
     HasVar,
     SubTag,
@@ -43,7 +43,7 @@ import from jaclang.pycore.unitree {
     FuncSignature,
     EventSignature
 }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree {
     IfStmt,
     ElseIf,
     ElseStmt,
@@ -51,15 +51,15 @@ import from jaclang.pycore.unitree {
     InForStmt,
     IterForStmt
 }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree {
     TryStmt,
     Except,
     FinallyStmt,
     WithStmt,
     ExprAsItem
 }
-import from jaclang.pycore.unitree { MatchStmt, MatchCase, SwitchStmt, SwitchCase }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree { MatchStmt, MatchCase, SwitchStmt, SwitchCase }
+import from jaclang.jac0core.unitree {
     Assignment,
     ReturnStmt,
     YieldExpr,
@@ -67,29 +67,29 @@ import from jaclang.pycore.unitree {
     AssertStmt,
     DeleteStmt
 }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree {
     CtrlStmt,
     ReportStmt,
     VisitStmt,
     DisengageStmt,
     ExprStmt
 }
-import from jaclang.pycore.unitree { TypedCtxBlock, GlobalStmt, NonLocalStmt }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree { TypedCtxBlock, GlobalStmt, NonLocalStmt }
+import from jaclang.jac0core.unitree {
     BinaryExpr,
     UnaryExpr,
     CompareExpr,
     BoolExpr,
     IfElseExpr
 }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree {
     AtomTrailer,
     AtomUnit,
     FuncCall,
     IndexSlice,
     EdgeRefTrailer
 }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree {
     ListVal,
     TupleVal,
     SetVal,
@@ -97,40 +97,45 @@ import from jaclang.pycore.unitree {
     KVPair,
     KWPair
 }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree {
     ListCompr,
     SetCompr,
     DictCompr,
     GenCompr,
     InnerCompr
 }
-import from jaclang.pycore.unitree { FString, FormattedValue, MultiString, LambdaExpr }
-import from jaclang.pycore.unitree { AwaitExpr, ConcurrentExpr, TypeRef }
-import from jaclang.pycore.unitree { EdgeOpRef, FilterCompr, AssignCompr }
-import from jaclang.pycore.unitree { ConnectOp, DisconnectOp }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree {
+    FString,
+    FormattedValue,
+    MultiString,
+    LambdaExpr
+}
+import from jaclang.jac0core.unitree { AwaitExpr, ConcurrentExpr }
+import from jaclang.jac0core.unitree { EdgeOpRef, FilterCompr, AssignCompr }
+import from jaclang.jac0core.unitree { ConnectOp, DisconnectOp }
+import from jaclang.jac0core.unitree {
     MatchOr,
     MatchAs,
     MatchWild,
     MatchValue,
     MatchSingleton
 }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree {
     MatchSequence,
     MatchMapping,
     MatchKVPair,
     MatchStar,
     MatchArch
 }
-import from jaclang.pycore.unitree {
+import from jaclang.jac0core.unitree {
     JsxElement,
     JsxElementName,
     JsxSpreadAttribute,
     JsxNormalAttribute
 }
-import from jaclang.pycore.unitree { JsxText, JsxExpression }
+import from jaclang.jac0core.unitree { JsxText, JsxExpression }
 
-import from jaclang.pycore.constant {
+import from jaclang.jac0core.constant {
     Tokens as Tok,
     SymbolAccess,
     SymbolType,
@@ -333,7 +338,6 @@ glob TOKEN_KIND_TO_TOK:
          TokenKind.RETURN_HINT: Tok.RETURN_HINT.value,
          TokenKind.NULL_OK: Tok.NULL_OK.value,
          TokenKind.DECOR_OP: Tok.DECOR_OP.value,
-         TokenKind.TYPE_OP: Tok.TYPE_OP.value,
          # F-String Tokens
          TokenKind.F_DQ_START: Tok.F_DQ_START.value,
          TokenKind.F_SQ_START: Tok.F_SQ_START.value,
@@ -461,6 +465,7 @@ obj Parser {
     def parse_element_stmt;
     def parse_client_block -> ClientBlock;
     def parse_server_block -> ServerBlock;
+    def parse_native_block -> NativeBlock;
     def parse_module_code -> ModuleCode;
     def parse_code_block_stmts -> list;
     def parse_statement;

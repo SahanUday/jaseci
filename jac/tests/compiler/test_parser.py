@@ -10,12 +10,12 @@ from pathlib import Path
 
 import pytest
 
-import jaclang.pycore.lark_jac_parser as jl
-import jaclang.pycore.unitree as uni
-from jaclang.pycore.constant import CodeContext, Tokens
-from jaclang.pycore.jac_parser import JacParser
-from jaclang.pycore.program import JacProgram
-from jaclang.pycore.unitree import Source
+import jaclang.jac0core.lark_jac_parser as jl
+import jaclang.jac0core.unitree as uni
+from jaclang.jac0core.constant import CodeContext, Tokens
+from jaclang.jac0core.jac_parser import JacParser
+from jaclang.jac0core.program import JacProgram
+from jaclang.jac0core.unitree import Source
 from jaclang.runtimelib.utils import read_file_with_encoding
 from tests.fixtures_list import MICRO_JAC_FILES
 
@@ -170,11 +170,13 @@ def test_parser_impl_all_rules() -> None:
 
 
 def test_all_ast_has_normalize() -> None:
-    """Test for enter/exit name diffs with parser."""
+    """Test that NormalizePass has enter methods for all AST node types."""
     import inspect
     import sys
 
-    import jaclang.pycore.unitree as uni
+    import jaclang.jac0core.unitree as uni
+    from jaclang.compiler.passes.tool.normalize_pass import NormalizePass
+    from jaclang.jac0core.helpers import pascal_to_snake
 
     exclude = [
         "UniNode",
@@ -226,7 +228,10 @@ def test_all_ast_has_normalize() -> None:
     )
     for cls in ordered_classes:
         if cls.__name__ not in exclude:
-            assert "normalize" in cls.__dict__
+            method_name = f"enter_{pascal_to_snake(cls.__name__)}"
+            assert hasattr(NormalizePass, method_name), (
+                f"NormalizePass missing {method_name} for {cls.__name__}"
+            )
 
 
 def test_inner_mod_impl(fixture_path: Callable[[str], str]) -> None:

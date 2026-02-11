@@ -141,7 +141,7 @@ with entry {
 
 import from typing { Any, Awaitable, Callable, Coroutine, Optional, ParamSpec, TypeVar }
 
-import from jaclang.pycore.constant {
+import from jaclang.jac0core.constant {
     JacSemTokenModifier as SemTokMod,
     JacSemTokenType as SemTokType,
 }
@@ -256,7 +256,7 @@ def x3() {
 }
 
 class HH {
-    def test() -> Optional[str] {
+    def `test() -> Optional[str] {
         a = """!
 hello
 hru
@@ -472,7 +472,7 @@ def x(
 }
 
 with entry {
-    visit [-->(`?Year:year==self.target_day.year)];
+    visit [-->(?:Year, year==self.target_day.year)];
 }
 
 # Match statement comment preservation
