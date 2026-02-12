@@ -185,6 +185,7 @@ impl HotReloader._recompile_client_code(
         source_path = Path(file_path).resolve();
         source_key = str(source_path);
 
+
         # Try to use already-compiled module from hub first (avoids recompilation)
         if not skip_hub_check and source_key in Jac.program.mod.hub {
             mod = Jac.program.mod.hub[source_key];
