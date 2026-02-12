@@ -52,7 +52,7 @@ obj HotReloader {
     def _recompile_client_code(file_path: str, skip_hub_check: bool = False) -> None;
     
     """Write generated JS code to disk."""
-    def _write_client_js_to_disk(file_path: str, js_code: str, client_manifest: Any) -> None;
+    def _write_client_js_to_disk(file_path: str, js_code: str) -> None;
 
     """Get client and server declarations from a file."""
     def _classify_declarations(file_path: str) -> tuple[bool, bool];
@@ -68,9 +68,6 @@ obj HotReloader {
 
     """Copy frontend files to compiled directory."""
     def _copy_frontend_files(file_path: str) -> None;
-
-    """Create export statement for recompiled JS code."""
-    def _create_export_statement(js_code: str, client_manifest: Any) -> str;
 
     """Update the entry point to reflect changes in modules."""
     def _update_entry_point -> None;
