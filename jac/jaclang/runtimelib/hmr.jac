@@ -41,16 +41,18 @@ obj HotReloader {
 
     """Reload server-side module in sys.modules."""
     def _reload_server_module(file_path: str, base_file: str | None = None) -> None;
-    
+
     """Clear modules from sys.modules and hub cache."""
     def _clear_modules_from_cache(file_paths: list[str]) -> None;
-    
+
     """Perform module reload with comprehensive error handling."""
-    def _perform_reload_with_error_handling(file_path: str, success_msg: str | None = None) -> bool;
+    def _perform_reload_with_error_handling(
+        file_path: str, success_msg: str | None = None
+    ) -> bool;
 
     """Recompile client declarations to JavaScript."""
     def _recompile_client_code(file_path: str, skip_hub_check: bool = False) -> None;
-    
+
     """Write generated JS code to disk."""
     def _write_client_js_to_disk(file_path: str, js_code: str) -> None;
 

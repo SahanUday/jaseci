@@ -52,7 +52,6 @@ impl HotReloader.on_file_change(event: Any) -> None {
 """Process a file change by classifying declarations and taking action."""
 impl HotReloader._process_change(file_path: str) -> None {
     import from jaclang.jac0core.bccache { discover_base_file }
-    
     # Check if this is a frontend file
     if file_path.endswith(
         tuple(
@@ -62,7 +61,6 @@ impl HotReloader._process_change(file_path: str) -> None {
         self._copy_frontend_files(file_path);
         return;
     }
-    
     # Handle .impl.jac files specially - they need to trigger base file recompilation
     if file_path.endswith('.impl.jac') {
         base_file = discover_base_file(file_path);
@@ -77,7 +75,6 @@ impl HotReloader._process_change(file_path: str) -> None {
         self._reload_server_module(file_path, base_file);
         return;
     }
-    
     # Check if file has client and/or server declarations
     (has_client, has_server) = self._classify_declarations(file_path);
     # Handle server declarations - reload in sys.modules
@@ -98,7 +95,6 @@ impl HotReloader._clear_modules_from_cache(file_paths: list[str]) -> None {
     for key in list(Jac.program.mod.hub.keys()) {
         sys.modules.pop(self._path_to_module(key), None);
     }
-    
     # Clear specific file paths from the hub
     for file_path in file_paths {
         if file_path in Jac.program.mod.hub {
@@ -115,9 +111,10 @@ impl HotReloader._clear_modules_from_cache(file_paths: list[str]) -> None {
 }
 
 """Perform module reload with comprehensive error handling."""
-impl HotReloader._perform_reload_with_error_handling(file_path: str, success_msg: str | None = None) -> bool {
+impl HotReloader._perform_reload_with_error_handling(
+    file_path: str, success_msg: str | None = None
+) -> bool {
     import from jaclang.jac0core.runtime { JacRuntime as Jac }
-    
     try {
         Jac.jac_import(
             target=self.module_name, base_path=self.base_path, reload_module=True
@@ -151,9 +148,10 @@ impl HotReloader._perform_reload_with_error_handling(file_path: str, success_msg
 }
 
 """Reload server-side module in sys.modules."""
-impl HotReloader._reload_server_module(file_path: str, base_file: str | None = None) -> None {
+impl HotReloader._reload_server_module(
+    file_path: str, base_file: str | None = None
+) -> None {
     import from jaclang.jac0core.runtime { JacRuntime as Jac }
-    
     # Determine which files to clear from cache
     if base_file {
         files_to_clear = [file_path, base_file];
@@ -162,19 +160,15 @@ impl HotReloader._reload_server_module(file_path: str, base_file: str | None = N
         files_to_clear = [file_path];
         has_client = False;
     }
-    
     # Clear modules from cache
     self._clear_modules_from_cache(files_to_clear);
-    
     # Perform reload with error handling
     if base_file {
         success_msg = f"[HMR] Reloaded impl file: {file_path}\n[HMR] Recompiled base file: {base_file}";
     } else {
         success_msg = None;
     }
-    
     reload_success = self._perform_reload_with_error_handling(file_path, success_msg);
-    
     # If base file has client code and reload succeeded, write JS from already-compiled module
     if reload_success and base_file and has_client {
         console.print(f"[HMR] Base file has client code, writing JS to disk...");
@@ -183,13 +177,14 @@ impl HotReloader._reload_server_module(file_path: str, base_file: str | None = N
 }
 
 """Recompile client declarations to JavaScript."""
-impl HotReloader._recompile_client_code(file_path: str, skip_hub_check: bool = False) -> None {
+impl HotReloader._recompile_client_code(
+    file_path: str, skip_hub_check: bool = False
+) -> None {
     import from jaclang.jac0core.runtime { JacRuntime as Jac }
-    
     try {
         source_path = Path(file_path).resolve();
         source_key = str(source_path);
-        
+
         # Try to use already-compiled module from hub first (avoids recompilation)
         if not skip_hub_check and source_key in Jac.program.mod.hub {
             mod = Jac.program.mod.hub[source_key];
@@ -231,12 +226,10 @@ impl HotReloader._recompile_client_code(file_path: str, skip_hub_check: bool = F
 """Write generated JS code to disk."""
 impl HotReloader._write_client_js_to_disk(file_path: str, js_code: str) -> None {
     source_path = Path(file_path).resolve();
-    
     jac_runtime_import = 'import {__jacJsx, __jacSpawn} from "@jac/runtime";';
     if '__jacJsx' in js_code and jac_runtime_import not in js_code {
         js_code = jac_runtime_import + '\n' + js_code;
     }
-    
     # Preserve directory structure
     base_dir = Path(self.base_path).resolve();
     source_dir = source_path.parent;
@@ -249,7 +242,6 @@ impl HotReloader._write_client_js_to_disk(file_path: str, js_code: str) -> None 
     output_base = Path(self.base_path) / self._client_output_dir;
     output_dir = output_base / rel_dir;
     output_dir.mkdir(parents=True, exist_ok=True);
-    
     js_filename = self._get_js_filename(file_path);
     output_path = output_dir / js_filename;
     output_path.write_text(js_code, encoding='utf-8');
