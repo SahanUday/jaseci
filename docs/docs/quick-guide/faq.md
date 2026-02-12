@@ -34,7 +34,7 @@ Common questions and answers. If you don't see your question below and couldn't 
         Yes. Jac integrates seamlessly with Python libraries.
 
     ??? question "What's the learning curve coming from Python? How is Jac different from just using Python?"
-        Jac adds graph-based architecture and AI-native features.[Learn Jac Basics - from Python](https://docs.jaseci.org/tutorials/language/basics/)
+        Jac supersets Python. It adds graph-based architecture and AI-native features.[Learn Jac Basics - from Python](https://docs.jaseci.org/tutorials/language/basics/)
 
     ??? question "Can ____ be done in Jac? Is ____ compatible with Jac?"
         **Yes**, if the answer to any of these questions is yes:
@@ -82,7 +82,7 @@ Common questions and answers. If you don't see your question below and couldn't 
         - VS Code debugger support: [Debugging Guide](https://docs.jaseci.org/tutorials/language/debugging/)
         - Writing and running tests: [Testing Reference](https://docs.jaseci.org/reference/testing/)
 
-    ??? question "How do I debug graph state visually? & How do I log/trace execution flow?"
+    ??? question "How do I debug graph state visually and trace execution flow?"
         Use the graph visualization tool in the debugger: [Graph Visualization](https://docs.jaseci.org/tutorials/language/debugging/#graph-visualization)
 
     ??? question "How do I test Jac walkers and nodes?"
@@ -117,7 +117,7 @@ Common questions and answers. If you don't see your question below and couldn't 
         Very active! Join the [Jaseci Discord Community](https://discord.gg/6j3QNdtcN6) for support and discussions with fellow contributors.
 
     ??? question "How often is Jac updated?"
-        Check the [GitHub Releases](https://github.com/Jaseci-Labs/jaseci) for the latest updates and versions.
+        Check the [GitHub Releases](https://docs.jaseci.org/community/release_notes/jaclang/) for the latest updates and versions.
     ??? question "How do I contribute to Jaseci?"
         - [Discord contributors channel](https://discord.gg/6j3QNdtcN6)
         - Read the [Contributing Guide](https://docs.jaseci.org/community/contributing/)
