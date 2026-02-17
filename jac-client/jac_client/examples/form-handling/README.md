@@ -5,11 +5,13 @@ This example demonstrates both **manual** and **auto-rendered** form handling ap
 ## 🎯 Two Approaches Demonstrated
 
 ### 1. **Manual Form Handling** (Traditional)
+
 - Full control over form JSX and styling
 - Explicit field registration and state management
 - Best for highly customized forms
 
 ### 2. **Auto-Rendered Forms with `JacForm`** ✨ (New!)
+
 - Zero-config automatic form generation from schemas
 - Formkit-style declarative approach
 - Reduces boilerplate by ~80%
@@ -45,6 +47,7 @@ jac client run
 ```
 
 Navigate between examples:
+
 - **Manual Signup** - Traditional approach with full JSX
 - **Manual Registration** - Complex multi-field manual form
 - **Auto Signup** ✨ - JacForm auto-rendered signup
@@ -94,7 +97,7 @@ password_value = form.watch("password");
 </form>
 ```
 
-**Pros:** Full control, highly customizable  
+**Pros:** Full control, highly customizable
 **Cons:** Verbose, repetitive code
 
 ---
@@ -117,7 +120,7 @@ def:pub MyForm -> JsxElement {
         password: jacSchema.string().min(8, "Min 8 characters")
     });
 
-    # 2. Define submit handler  
+    # 2. Define submit handler
     async def handleSubmit(data: any) -> None {
         console.log("Submitted:", data);
     }
@@ -184,26 +187,30 @@ Each field in `field_config` can have:
 ### Layouts
 
 #### Vertical (Default)
+
 ```jac
 <JacForm schema={schema} onSubmit={handler} layout="vertical" />
 ```
 
 #### Grid (Multi-column)
+
 ```jac
-<JacForm 
-    schema={schema} 
-    onSubmit={handler} 
-    layout="grid" 
-    gridColumns={2} 
+<JacForm
+    schema={schema}
+    onSubmit={handler}
+    layout="grid"
+    gridColumns={2}
 />
 ```
 
 #### Horizontal
+
 ```jac
 <JacForm schema={schema} onSubmit={handler} layout="horizontal" />
 ```
 
 #### Inline (Compact)
+
 ```jac
 <JacForm schema={schema} onSubmit={handler} layout="inline" />
 ```
@@ -313,6 +320,7 @@ field_config={{
 Both approaches use `jacSchema` (Zod wrapper) for validation:
 
 ### String Validation
+
 ```jac
 email: jacSchema.string()
     .min(1, "Email is required")
@@ -320,6 +328,7 @@ email: jacSchema.string()
 ```
 
 ### Regex Patterns
+
 ```jac
 password: jacSchema.string()
     .min(8, "Min 8 characters")
@@ -329,6 +338,7 @@ password: jacSchema.string()
 ```
 
 ### Cross-Field Validation
+
 ```jac
 schema.refine(
     lambda data -> bool { return data.password == data.confirmPassword; },
@@ -340,6 +350,7 @@ schema.refine(
 ```
 
 ### Optional Fields
+
 ```jac
 companyName: jacSchema.string().optional()
 ```
@@ -349,6 +360,7 @@ companyName: jacSchema.string().optional()
 JacForm automatically renders boolean fields as checkboxes. It correctly handles wrapped types:
 
 **Required Checkbox (with validation):**
+
 ```jac
 agreeToTerms: jacSchema.boolean().refine(
     lambda v -> bool { return v == True; },
@@ -357,16 +369,19 @@ agreeToTerms: jacSchema.boolean().refine(
 ```
 
 **Optional Checkbox:**
+
 ```jac
 agreeToNewsletter: jacSchema.boolean().optional()
 ```
 
 **With Default Value:**
+
 ```jac
 newsletter: jacSchema.boolean().default(false)
 ```
 
 **Field Config for Checkboxes:**
+
 ```jac
 field_config={{
     "agreeToTerms": {
@@ -408,12 +423,14 @@ field_config={{
 ## 🎯 When to Use Which Approach
 
 ### Use Manual Forms When:
+
 - You need pixel-perfect custom designs
 - Complex conditional rendering logic
 - Non-standard form layouts
 - Heavily branded UI requirements
 
 ### Use JacForm (Auto-Rendered) When:
+
 - Building standard registration/login forms
 - Rapid prototyping
 - Consistent form styling across app
@@ -425,6 +442,7 @@ field_config={{
 ## 💡 Best Practices
 
 ### 1. Schema Reusability
+
 ```jac
 # components/Schema.jac
 def:pub SignupSchema -> any {
@@ -437,6 +455,7 @@ schema = SignupSchema();
 ```
 
 ### 2. Field Configuration
+
 ```jac
 # Keep field_config organized
 field_config = {
@@ -448,6 +467,7 @@ field_config = {
 ```
 
 ### 3. Error Handling in Submit
+
 ```jac
 async def handleSubmit(data: any) -> None {
     try {
@@ -460,6 +480,7 @@ async def handleSubmit(data: any) -> None {
 ```
 
 ### 4. Layout Selection
+
 - **Vertical**: Default for mobile-first designs
 - **Grid**: Multi-column forms on larger screens
 - **Horizontal**: Side-by-side fields (name, surname)
@@ -470,16 +491,19 @@ async def handleSubmit(data: any) -> None {
 ## 📦 Import Patterns
 
 ### Using JacForm
+
 ```jac
 cl import from "@jac/runtime" { JacForm, jacSchema, useNavigate }
 ```
 
 ### Using Manual Forms
+
 ```jac
 cl import from "@jac/runtime" { useJacForm, jacSchema }
 ```
 
 ### Custom Schemas
+
 ```jac
 cl import from ".components.Schema" { SignupSchema, RegisterSchema }
 ```
@@ -494,11 +518,13 @@ jac client run
 ```
 
 Or from the parent directory:
+
 ```bash
 jac client run jac_client/examples/form-handling
 ```
 
 Navigate between examples using the navigation bar:
+
 - **Manual Signup** - Traditional approach (~318 lines)
 - **Manual Registration** - Complex manual form (~488 lines)
 - **Auto Signup** ✨ - JacForm auto-rendered (~60 lines)
@@ -511,6 +537,7 @@ Navigate between examples using the navigation bar:
 ### Manual Forms
 
 **SignupForm (`SignupForm.cl.jac`)**
+
 - Email and password fields
 - Password strength indicator
 - Password confirmation matching
@@ -518,6 +545,7 @@ Navigate between examples using the navigation bar:
 - Real-time validation feedback
 
 **RegForm (`RegForm.cl.jac`)**
+
 - Comprehensive user registration
 - Multiple field types (text, phone, address, etc.)
 - Complex validation rules
@@ -528,6 +556,7 @@ Navigate between examples using the navigation bar:
 ### Auto-Rendered Forms (JacForm)
 
 **AutoSignupForm (`AutoSignupForm.cl.jac`)**
+
 - Same functionality as SignupForm
 - ~80% less code
 - Auto field type detection
@@ -535,6 +564,7 @@ Navigate between examples using the navigation bar:
 - Vertical layout
 
 **AutoRegForm (`AutoRegForm.cl.jac`)**
+
 - Same functionality as RegForm
 - ~77% less code
 - Auto grid layout (2 columns)
@@ -544,6 +574,7 @@ Navigate between examples using the navigation bar:
 ### Shared Components
 
 **Schema (`components/Schema.jac`)**
+
 - Reusable Zod validation schemas
 - Custom validation rules
 - Cross-field validation (password matching)
@@ -577,6 +608,7 @@ This example demonstrates the power of **abstraction** in form handling:
 Both approaches use the same underlying validation (`jacSchema`) and form state management (`useJacForm`), but JacForm abstracts away the repetitive JSX rendering.
 
 **Key Takeaway**: Choose based on your needs
+
 - Custom designs → Manual
 - Standard forms → JacForm
 

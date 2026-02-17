@@ -394,7 +394,7 @@ impl JacForm(props: dict) -> JsxElement {
     gridColumns = props.gridColumns || 2;
     validateMode = props.validateMode || "onTouched";
     className = props.className || "";
-    
+
     # Extract field names from schema
     # Handle ZodEffects (schemas with .refine()) by unwrapping
     actualSchema = schema;
@@ -406,7 +406,7 @@ impl JacForm(props: dict) -> JsxElement {
     } except Exception as e {
         console.warn("Failed to unwrap schema:", e);
     }
-    
+
     schemaShape = actualSchema.shape || {};
     fieldNames = Object.keys(schemaShape);
 
@@ -422,24 +422,24 @@ impl JacForm(props: dict) -> JsxElement {
         if not schema._def or depth >= maxDepth {
             return schema;
         }
-        
+
         typeValue = schema._def.type;
-        
+
         # Unwrap ZodOptional (.optional())
         if typeValue == "optional" and schema._def.innerType {
             return unwrapZodSchema(schema._def.innerType, depth + 1);
         }
-        
+
         # Unwrap ZodDefault (.default())
         if typeValue == "default" and schema._def.innerType {
             return unwrapZodSchema(schema._def.innerType, depth + 1);
         }
-        
+
         # Unwrap ZodEffects (.refine(), .transform(), etc.)
         if schema._def.checks and schema._def.schema {
             return unwrapZodSchema(schema._def.schema, depth + 1);
         }
-        
+
         # Base case: not a wrapper type
         return schema;
     }
@@ -495,7 +495,7 @@ impl JacForm(props: dict) -> JsxElement {
     def renderField(fieldName: str) -> JsxElement {
         fieldSchema = schemaShape[fieldName];
         fieldType = getFieldType(fieldName, fieldSchema);
-        
+
         # Get field configuration
         config = field_config[fieldName] if field_config[fieldName] else {};
         label = config.label if config.label else fieldName;
@@ -503,7 +503,7 @@ impl JacForm(props: dict) -> JsxElement {
         fieldClassName = config.className if config.className else "";
         inputClassName = config.inputClassName if config.inputClassName else "";
         labelClassName = config.labelClassName if config.labelClassName else "";
-        
+
         # Register field with type-specific options
         field = form.register(fieldName);
         error = errors[fieldName];
@@ -542,7 +542,7 @@ impl JacForm(props: dict) -> JsxElement {
                 </div>
             );
         }
-        
+
         # Select fields (ZodEnum)
         if fieldType == "select" {
             options = fieldSchema._def.values if fieldSchema._def and fieldSchema._def.values else [];
@@ -583,7 +583,7 @@ impl JacForm(props: dict) -> JsxElement {
                 </div>
             );
         }
-        
+
         # Regular input fields
         return (
             <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
@@ -653,7 +653,7 @@ impl JacForm(props: dict) -> JsxElement {
     buttonClassName = submitClassName if submitClassName else "";
 
     return (
-        <form 
+        <form
             onSubmit={form.handleSubmit(onSubmit)}
             className={formClassName}
         >

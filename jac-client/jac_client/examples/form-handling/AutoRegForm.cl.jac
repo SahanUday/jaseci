@@ -111,7 +111,7 @@ def:pub AutoRegForm -> JsxElement {
             >
                 Auto-rendered form with grid layout
             </p>
-            
+
             <JacForm
                 schema={registrationSchema}
                 onSubmit={handleSubmit}

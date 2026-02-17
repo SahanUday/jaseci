@@ -16,7 +16,7 @@ cl import ".assets.jacform-default.css";
 
 def:pub AutoSignupForm -> JsxElement {
     navigate = useNavigate();
-    
+
     # Define schema with Zod directly
     signupSchema = jacSchema.object(
         {

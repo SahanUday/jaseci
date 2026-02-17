@@ -27,6 +27,7 @@ Jac Client provides two powerful approaches to form handling:
 2. **Manual Forms** (`useJacForm`) - Full control over form JSX and layout
 
 Both approaches share the same foundation:
+
 - **Type-safe validation** with Zod schemas
 - **react-hook-form** under the hood for optimal performance
 - **Real-time validation** with customizable validation modes
@@ -47,6 +48,7 @@ Both approaches share the same foundation:
 ### When to Use JacForm (Auto-Rendered)
 
 ✅ **Best for:**
+
 - Standard CRUD forms
 - Admin panels and dashboards
 - Rapid prototyping
@@ -54,6 +56,7 @@ Both approaches share the same foundation:
 - Data entry forms
 
 **Pros:**
+
 - Minimal code (~80% reduction)
 - Automatic field rendering
 - Built-in validation error display
@@ -61,6 +64,7 @@ Both approaches share the same foundation:
 - Easy to maintain
 
 **Cons:**
+
 - Less control over individual field layout
 - Custom field types require field_config
 - Not ideal for complex multi-step forms
@@ -68,6 +72,7 @@ Both approaches share the same foundation:
 ### When to Use useJacForm (Manual)
 
 ✅ **Best for:**
+
 - Highly customized UIs
 - Complex multi-step wizards
 - Forms with conditional field rendering
@@ -75,12 +80,14 @@ Both approaches share the same foundation:
 - Unique design requirements
 
 **Pros:**
+
 - Complete control over JSX
 - Custom field components
 - Complex conditional logic
 - Pixel-perfect designs
 
 **Cons:**
+
 - More verbose code
 - Manual error handling
 - Repetitive field registration
@@ -112,12 +119,12 @@ def:pub SignupForm -> JsxElement {
         email: jacSchema.string().email("Invalid email"),
         password: jacSchema.string().min(8, "Min 8 characters")
     });
-    
+
     # Handle submission
     async def handleSubmit(data: any) -> None {
         console.log("Form data:", data);
     }
-    
+
     return (
         <JacForm
             schema={schema}
@@ -166,11 +173,11 @@ def:pub RegistrationForm -> JsxElement {
         lambda data -> bool { return data.password == data.confirmPassword; },
         { message: "Passwords must match", path: ["confirmPassword"] }
     );
-    
+
     async def handleSubmit(data: any) -> None {
         console.log("Registration data:", data);
     }
-    
+
     return (
         <JacForm
             schema={schema}
@@ -301,9 +308,9 @@ def:pub LoginForm -> JsxElement {
         email: jacSchema.string().email("Invalid email"),
         password: jacSchema.string().min(8, "Min 8 characters")
     });
-    
+
     form = useJacForm("onTouched", schema);
-    
+
     return (
         <form onSubmit={form.handleSubmit(handleSubmit)}>
             <input {...form.register("email")} />
@@ -317,6 +324,7 @@ def:pub LoginForm -> JsxElement {
 ### Learn More
 
 For comprehensive examples of manual form handling including:
+
 - Form state management
 - Field registration patterns
 - Real-time validation
@@ -324,6 +332,7 @@ For comprehensive examples of manual form handling including:
 - Custom field components
 
 See the complete working examples in the [form-handling example project](../../examples/form-handling/):
+
 - **[SignupForm.cl.jac](../../examples/form-handling/SignupForm.cl.jac)** - Full manual signup form
 - **[RegForm.cl.jac](../../examples/form-handling/RegForm.cl.jac)** - Complex registration with 14+ fields
 
@@ -489,10 +498,10 @@ schema = jacSchema.object({
         lambda v -> bool { return v == True; },
         "You must agree to terms"
     ),
-    
+
     # Optional checkbox
     newsletter: jacSchema.boolean().optional(),
-    
+
     # Checkbox with default
     notifications: jacSchema.boolean().default(true)
 });
@@ -722,6 +731,7 @@ form = useJacForm(validateMode: string, schema: ZodSchema)
 ```
 
 **Returns:**
+
 - `form.register(fieldName)` - Register a field
 - `form.watch(fieldName)` - Watch field value
 - `form.handleSubmit(onSubmit)` - Submit handler
@@ -800,6 +810,7 @@ Jac Client provides powerful, flexible form handling with two approaches:
 - **useJacForm** - Full control over form UI for custom requirements
 
 Both approaches share:
+
 - Type-safe validation with Zod
 - Optimized performance with react-hook-form
 - Declarative, maintainable code
