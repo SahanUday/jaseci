@@ -1,0 +1,102 @@
+/**
+ * JacForm Default Styles
+ * 
+ * This is a default theme for JacForm components.
+ * You can customize these styles or create your own theme.
+ * 
+ * Usage: Import this CSS file in your component or use your own custom styles.
+ */
+
+/* Form container */
+.jac-form {
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Input fields */
+.jac-form input[type="text"],
+.jac-form input[type="email"],
+.jac-form input[type="password"],
+.jac-form input[type="number"],
+.jac-form input[type="tel"],
+.jac-form input[type="url"],
+.jac-form input[type="date"],
+.jac-form input[type="datetime-local"],
+.jac-form select {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.jac-form input[type="text"]:focus,
+.jac-form input[type="email"]:focus,
+.jac-form input[type="password"]:focus,
+.jac-form input[type="number"]:focus,
+.jac-form input[type="tel"]:focus,
+.jac-form input[type="url"]:focus,
+.jac-form input[type="date"]:focus,
+.jac-form input[type="datetime-local"]:focus,
+.jac-form select:focus {
+    border-color: #3b82f6;
+}
+
+/* Error state */
+.jac-form input.error,
+.jac-form select.error {
+    border-color: #ef4444;
+}
+
+/* Labels */
+.jac-form label {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+/* Checkbox labels */
+.jac-form input[type="checkbox"] + span {
+    font-weight: 500;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+/* Submit button */
+.jac-form-submit {
+    padding: 0.75rem;
+    background-color: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s;
+    margin-top: 1rem;
+}
+
+.jac-form-submit:hover:not(:disabled) {
+    background-color: #2563eb;
+}
+
+.jac-form-submit:disabled {
+    background-color: #93c5fd;
+    cursor: not-allowed;
+}
+
+/* Custom overrides - uncomment and modify as needed:
+
+.jac-form-field {
+    Add custom field wrapper styles here
+}
+
+.jac-form-input {
+    Add custom input styles here
+}
+
+.jac-form-label {
+    Add custom label styles here
+}
+
+*/

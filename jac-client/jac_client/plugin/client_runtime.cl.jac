@@ -54,3 +54,4 @@ def:pub AuthGuard(redirect: str = "/login") -> JsxElement;
 def:pub ErrorFallback(error: str, resetErrorBoundary: any) -> JsxElement;
 def:pub errorOverlay(filePath: str, errors: str) -> JsxElement;
 def:pub useJacForm(form_mode: str = "onTouched", schema: any) -> any;
+def:pub JacForm(props: dict) -> JsxElement;

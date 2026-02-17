@@ -743,9 +743,11 @@ Ready to dive deeper? Explore these advanced topics:
   - [Web Target](multi-targets/web-target.md): Web builds in detail
   - [Desktop Target](multi-targets/desktop-target.md): Desktop builds in detail
 - **[Routing](routing.md)**: Build multi-page apps with declarative routing (`<Router>`, `<Routes>`, `<Route>`)
+- **[Form Handling](advance/form-handling.md)**: Build robust, type-safe forms with built-in validation and automatic UI generation
 - **[Lifecycle Hooks](lifecycle-hooks.md)**: Use `onMount()` and React hooks for initialization logic
 - **[Advanced State](advanced-state.md)**: Manage complex state with React hooks and context
 - **[Imports](imports.md)**: Import third-party libraries (React, Ant Design, Lodash), other Jac files, and JavaScript modules
+- **[Error Handling](advance/error-handling.md)**: Improve error resilience with error boundaries
 - **[Learn JAC](https://www.jac-lang.org)**: Explore Jac's graph-based data modeling
 
 ## Examples
@@ -754,6 +756,7 @@ Check out the `examples/` directory for working applications:
 
 - **[basic](../../examples/basic/)**: Simple counter app using React hooks
 - **[with-router](../../examples/with-router/)**: Multi-page app with declarative routing
+- **[form-handling](../../examples/form-handling/)**: Complete guide to manual and auto-rendered forms with validation
 - **[little-x](../../examples/little-x/)**: Social media app with third-party libraries
 - **[todo-app](../../examples/todo-app/)**: Full-featured todo app with authentication
 - **[basic-full-stack](../../examples/basic-full-stack/)**: Full-stack app with backend integration

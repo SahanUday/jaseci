@@ -1,21 +1,96 @@
-"""login - Entry Point.
+"""form-handling - Entry Point.
 
-Combines server-side endpoints with client-side UI.
+Demonstrates both manual form handling and auto-rendered forms using JacForm.
 """
 
 # Client-side UI
 cl {
     import from .RegForm { RegForm }
     import from .SignupForm { SignupForm }
-    import from "@jac/runtime" { Router, Routes, Route }
+    import from .AutoSignupForm { AutoSignupForm }
+    import from .AutoRegForm { AutoRegForm }
+    import from "@jac/runtime" { Router, Routes, Route, Link }
 
     def:pub app -> JsxElement {
         return
             <Router>
-                <div>
+                <div style={{fontFamily: "system-ui, -apple-system, sans-serif"}}>
+                    <nav
+                        style={{
+                            backgroundColor: "#1a1a2e",
+                            padding: "1rem 2rem",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                        }}
+                    >
+                        <div style={{maxWidth: "1200px", margin: "0 auto"}}>
+                            <h1 style={{color: "#fff", margin: "0 0 1rem 0", fontSize: "1.5rem"}}>
+                                Jac Form Handling Examples
+                            </h1>
+                            <div style={{display: "flex", gap: "1rem", flexWrap: "wrap"}}>
+                                <Link
+                                    to="/"
+                                    style={{
+                                        color: "#3b82f6",
+                                        textDecoration: "none",
+                                        padding: "0.5rem 1rem",
+                                        backgroundColor: "#fff",
+                                        borderRadius: "6px",
+                                        fontSize: "0.9rem",
+                                        fontWeight: "500"
+                                    }}
+                                >
+                                    Manual Signup
+                                </Link>
+                                <Link
+                                    to="/register"
+                                    style={{
+                                        color: "#3b82f6",
+                                        textDecoration: "none",
+                                        padding: "0.5rem 1rem",
+                                        backgroundColor: "#fff",
+                                        borderRadius: "6px",
+                                        fontSize: "0.9rem",
+                                        fontWeight: "500"
+                                    }}
+                                >
+                                    Manual Registration
+                                </Link>
+                                <Link
+                                    to="/auto-signup"
+                                    style={{
+                                        color: "#10b981",
+                                        textDecoration: "none",
+                                        padding: "0.5rem 1rem",
+                                        backgroundColor: "#fff",
+                                        borderRadius: "6px",
+                                        fontSize: "0.9rem",
+                                        fontWeight: "600"
+                                    }}
+                                >
+                                    ✨ Auto Signup (JacForm)
+                                </Link>
+                                <Link
+                                    to="/auto-register"
+                                    style={{
+                                        color: "#10b981",
+                                        textDecoration: "none",
+                                        padding: "0.5rem 1rem",
+                                        backgroundColor: "#fff",
+                                        borderRadius: "6px",
+                                        fontSize: "0.9rem",
+                                        fontWeight: "600"
+                                    }}
+                                >
+                                    ✨ Auto Registration (JacForm)
+                                </Link>
+                            </div>
+                        </div>
+                    </nav>
                     <Routes>
                         <Route path="/" element={<SignupForm />} />
                         <Route path="/register" element={<RegForm />} />
+                        <Route path="/auto-signup" element={<AutoSignupForm />} />
+                        <Route path="/auto-register" element={<AutoRegForm />} />
                     </Routes>
                 </div>
             </Router>;

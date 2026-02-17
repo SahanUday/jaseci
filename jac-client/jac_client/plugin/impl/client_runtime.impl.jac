@@ -371,3 +371,307 @@ impl errorOverlay(filePath: str, errors: str) -> JsxElement {
 impl useJacForm(form_mode: str, schema: any) -> any {
     return useForm(mode=form_mode, resolver=zodResolver(schema));
 }
+"""Auto-generated JacForm component that can render forms based on Zod schemas with built-in validation and styling.
+        Props:
+        - schema: Zod schema defining the form fields and validation
+        - onSubmit: function to call with form data on submit
+        - layout: "vertical" (default), "horizontal", "inline", or "grid"
+        - field_config: dict mapping field names to {label, placeholder, className, inputClassName, labelClassName}
+        - submitLabel: custom label for the submit button (default "Submit")
+        - submitClassName: custom className for submit button
+        - gridColumns: number of columns for grid layout (default 2)
+        - validateMode: validation mode for react-hook-form (default "onTouched")
+        - className: additional CSS class for the form element
+"""
+impl JacForm(props: dict) -> JsxElement {
+    # Destructure props (JSX passes all props as a single object)
+    schema = props.schema;
+    onSubmit = props.onSubmit;
+    layout = props.layout || "vertical";
+    field_config = props.field_config || {};
+    submitLabel = props.submitLabel || "Submit";
+    submitClassName = props.submitClassName || "";
+    gridColumns = props.gridColumns || 2;
+    validateMode = props.validateMode || "onTouched";
+    className = props.className || "";
+    
+    # Extract field names from schema
+    # Handle ZodEffects (schemas with .refine()) by unwrapping
+    actualSchema = schema;
+    try {
+        if schema._def and schema._def.schema {
+            # This is a ZodEffects, unwrap to get the base schema
+            actualSchema = schema._def.schema;
+        }
+    } except Exception as e {
+        console.warn("Failed to unwrap schema:", e);
+    }
+    
+    schemaShape = actualSchema.shape || {};
+    fieldNames = Object.keys(schemaShape);
+
+    # Initialize form with the original schema (not the unwrapped one)
+    form = useJacForm(validateMode, schema);
+    errors = form.formState.errors;
+    isSubmitting = form.formState.isSubmitting;
+    isDirty = form.formState.isDirty;
+
+    # Helper function to recursively unwrap Zod wrapper types
+    def unwrapZodSchema(schema: any, depth: int = 0) -> any {
+        maxDepth = 10;  # Prevent infinite recursion
+        if not schema._def or depth >= maxDepth {
+            return schema;
+        }
+        
+        typeValue = schema._def.type;
+        
+        # Unwrap ZodOptional (.optional())
+        if typeValue == "optional" and schema._def.innerType {
+            return unwrapZodSchema(schema._def.innerType, depth + 1);
+        }
+        
+        # Unwrap ZodDefault (.default())
+        if typeValue == "default" and schema._def.innerType {
+            return unwrapZodSchema(schema._def.innerType, depth + 1);
+        }
+        
+        # Unwrap ZodEffects (.refine(), .transform(), etc.)
+        if schema._def.checks and schema._def.schema {
+            return unwrapZodSchema(schema._def.schema, depth + 1);
+        }
+        
+        # Base case: not a wrapper type
+        return schema;
+    }
+
+    # Helper function to detect field type from schema
+    def getFieldType(fieldName: str, fieldSchema: any) -> str {
+        # Check if field name suggests a password
+        if fieldName.toLowerCase().includes("password") {
+            return "password";
+        }
+
+        # Unwrap nested Zod types (optional, default, refine, etc.)
+        unwrappedSchema = unwrapZodSchema(fieldSchema);
+
+        # Check unwrapped schema for specific validators
+        if unwrappedSchema._def {
+            typeValue = unwrappedSchema._def.type;
+
+            # Check for string with specific validators
+            if typeValue == "string" {
+                checks = unwrappedSchema._def.checks if unwrappedSchema._def.checks else [];
+                for check in checks {
+                    if check.kind == "email" {
+                        return "email";
+                    } elif check.kind == "url" {
+                        return "url";
+                    } elif check.kind == "datetime" {
+                        return "datetime-local";
+                    }
+                }
+            }
+            # Check for date
+            if typeValue == "date" {
+                return "date";
+            }
+            # Check for number
+            if typeValue == "number" {
+                return "number";
+            }
+            # Check for boolean
+            if typeValue == "boolean" {
+                return "checkbox";
+            }
+            # Check for enum
+            if typeValue == "enum" {
+                return "select";        # can render as dropdown
+            }
+        }
+        return "text";
+    }
+
+    # Helper function to render a single field
+    def renderField(fieldName: str) -> JsxElement {
+        fieldSchema = schemaShape[fieldName];
+        fieldType = getFieldType(fieldName, fieldSchema);
+        
+        # Get field configuration
+        config = field_config[fieldName] if field_config[fieldName] else {};
+        label = config.label if config.label else fieldName;
+        placeholder = config.placeholder if config.placeholder else "";
+        fieldClassName = config.className if config.className else "";
+        inputClassName = config.inputClassName if config.inputClassName else "";
+        labelClassName = config.labelClassName if config.labelClassName else "";
+        
+        # Register field with type-specific options
+        field = form.register(fieldName);
+        error = errors[fieldName];
+
+        # Checkbox fields - need special handling for boolean values
+        if fieldType == "checkbox" {
+            watchValue = form.watch(fieldName);
+            return (
+                <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
+                    <label style={{cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem"}}>
+                        <input
+                            type="checkbox"
+                            name={field.name}
+                            ref={field.ref}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            checked={watchValue || false}
+                            className={inputClassName}
+                            style={{cursor: "pointer"}}
+                        />
+                        <span className={labelClassName}>
+                            {label}
+                        </span>
+                    </label>
+                    {error &&
+                        <p
+                            style={{
+                                color: "#ef4444",
+                                fontSize: "0.85rem",
+                                marginTop: "0.25rem"
+                            }}
+                        >
+                            ⚠️ {error.message}
+                        </p>
+                    }
+                </div>
+            );
+        }
+        
+        # Select fields (ZodEnum)
+        if fieldType == "select" {
+            options = fieldSchema._def.values if fieldSchema._def and fieldSchema._def.values else [];
+            return (
+                <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
+                    <label className={labelClassName} style={{display: "block", marginBottom: "0.5rem"}}>
+                        {label}
+                    </label>
+                    <select
+                        {...field}
+                        className={inputClassName}
+                        style={{
+                            width: "100%",
+                            boxSizing: "border-box"
+                        }}
+                    >
+                        <option value="" disabled >
+                            {placeholder if placeholder else f"Select {label}"}
+                        </option>
+                        {options.map(
+                            lambda option:any -> JsxElement {
+                                <option value={option} key={option}>
+                                    {option}
+                                </option>;}
+                        )}
+                    </select>
+                    {error &&
+                        <p
+                            style={{
+                                color: "#ef4444",
+                                fontSize: "0.85rem",
+                                marginTop: "0.25rem"
+                            }}
+                        >
+                            ⚠️ {error.message}
+                        </p>
+                    }
+                </div>
+            );
+        }
+        
+        # Regular input fields
+        return (
+            <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
+                <label className={labelClassName} style={{display: "block", marginBottom: "0.5rem"}}>
+                    {label}
+                </label>
+                <input
+                    type={fieldType}
+                    placeholder={placeholder}
+                    {...field}
+                    className={inputClassName}
+                    style={{
+                        width: "100%",
+                        boxSizing: "border-box"
+                    }}
+                />
+                {error &&
+                    <p
+                        style={{
+                            color: "#ef4444",
+                            fontSize: "0.85rem",
+                            marginTop: "0.25rem"
+                        }}
+                    >
+                        ⚠️ {error.message}
+                    </p>
+                }
+            </div>
+        );
+    }
+
+    # Generate layout styles based on layout prop
+    def getLayoutStyle -> dict {
+        if layout == "grid" {
+            return {
+                display: "grid",
+                gridTemplateColumns: f"repeat({gridColumns}, 1fr)",
+                gap: "1rem"
+            };
+        } elif layout == "horizontal" {
+            return {
+                display: "flex",
+                gap: "1rem",
+                flexWrap: "wrap",
+                alignItems: "flex-start"
+            };
+        } elif layout == "inline" {
+            return {
+                display: "flex",
+                gap: "0.5rem",
+                alignItems: "flex-end"
+            };
+        } else {
+            # vertical (default)
+            return {};
+        }
+    }
+
+    # Render all fields
+    fields = [];
+    for fieldName in fieldNames {
+        fields.append(renderField(fieldName));
+    }
+
+    layoutStyle = getLayoutStyle();
+    formClassName = className if className else "";
+    buttonClassName = submitClassName if submitClassName else "";
+
+    return (
+        <form 
+            onSubmit={form.handleSubmit(onSubmit)}
+            className={formClassName}
+        >
+            <div style={layoutStyle}>
+                {fields}
+            </div>
+            <button
+                type="submit"
+                disabled={isSubmitting or not isDirty}
+                className={buttonClassName}
+                style={{
+                    width: "100%",
+                    cursor: ("not-allowed" if (isSubmitting or not isDirty) else "pointer")
+                }}
+            >
+                {isSubmitting and "Submitting..."}
+                {not isSubmitting and submitLabel}
+            </button>
+        </form>
+    );
+}

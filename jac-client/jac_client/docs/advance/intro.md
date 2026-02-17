@@ -9,3 +9,5 @@ This section covers advanced configuration and customization options for Jac Cli
 - [Package Management](./package-management.md) - Manage npm dependencies through centralized configuration
 - [Custom Assets Handling](./custom-assets-handling.md) - Configure and manage custom assets in your project
 - [App Metadata](./app-metadata.md) - Define and customize application metadata
+- [Form Handling](./form-handling.md) - Build robust, type-safe forms with built-in validation and automatic UI generation
+- [Error Handling](./error-handling.md) - Improve error resilience with error boundaries
