@@ -1,16 +1,3 @@
-"""Auto-rendered registration form using JacForm component.
-
-This demonstrates advanced JacForm features with grid layout, multiple field types,
-and comprehensive validation - all auto-rendered from the schema.
-
-Compare this to RegForm.cl.jac to see the difference:
-- RegForm.cl.jac: ~488 lines with manual JSX
-- AutoRegForm.cl.jac: ~110 lines with JacForm auto-rendering
-
-Note: Add the CSS file jacform-default.css to your HTML to use default styles,
-or provide custom className values with your own CSS.
-"""
-
 cl import from "@jac/runtime" { JacForm, jacSchema }
 cl import ".assets.jacform-default.css";
 
@@ -120,20 +107,20 @@ def:pub AutoRegForm -> JsxElement {
                 className="jac-form"
                 submitClassName="jac-form-submit"
                 field_config={{
-                    "firstName": {label: "First Name", placeholder: "John", inputClassName: "jac-form-input"},
-                    "lastName": {label: "Last Name", placeholder: "Doe", inputClassName: "jac-form-input"},
-                    "email": {label: "Email Address", placeholder: "john@example.com", inputClassName: "jac-form-input"},
-                    "phone": {label: "Phone Number", placeholder: "+1 (555) 123-4567", inputClassName: "jac-form-input"},
-                    "companyName": {label: "Company Name (Optional)", placeholder: "Acme Corp", inputClassName: "jac-form-input"},
-                    "address": {label: "Street Address", placeholder: "123 Main St", inputClassName: "jac-form-input"},
-                    "city": {label: "City", placeholder: "New York", inputClassName: "jac-form-input"},
-                    "state": {label: "State/Province", placeholder: "NY", inputClassName: "jac-form-input"},
-                    "zipCode": {label: "Zip Code", placeholder: "10001", inputClassName: "jac-form-input"},
-                    "country": {label: "Country", placeholder: "USA", inputClassName: "jac-form-input"},
-                    "password": {label: "Password", placeholder: "Min 8 characters", inputClassName: "jac-form-input"},
-                    "confirmPassword": {label: "Confirm Password", placeholder: "Re-enter password", inputClassName: "jac-form-input"},
-                    "agreeToTerms": {label: "I agree to the terms and conditions"},
-                    "agreeToNewsletter": {label: "Subscribe to newsletter (optional)"}
+                    "firstName": {label: "First Name", type: "text", placeholder: "John", inputClassName: "jac-form-input"},
+                    "lastName": {label: "Last Name", type: "text", placeholder: "Doe", inputClassName: "jac-form-input"},
+                    "email": {label: "Email Address", type: "email", placeholder: "john@example.com", inputClassName: "jac-form-input"},
+                    "phone": {label: "Phone Number", type: "tel", placeholder: "+1 (555) 123-4567", inputClassName: "jac-form-input"},
+                    "companyName": {label: "Company Name (Optional)", type: "text", placeholder: "Acme Corp", inputClassName: "jac-form-input"},
+                    "address": {label: "Street Address", type: "text", placeholder: "123 Main St", inputClassName: "jac-form-input"},
+                    "city": {label: "City", type: "text", placeholder: "New York", inputClassName: "jac-form-input"},
+                    "state": {label: "State/Province", type: "text", placeholder: "NY", inputClassName: "jac-form-input"},
+                    "zipCode": {label: "Zip Code", type: "text", placeholder: "10001", inputClassName: "jac-form-input"},
+                    "country": {label: "Country", type: "text", placeholder: "USA", inputClassName: "jac-form-input"},
+                    "password": {label: "Password", type: "password", placeholder: "Min 8 characters", inputClassName: "jac-form-input"},
+                    "confirmPassword": {label: "Confirm Password", type: "password", placeholder: "Re-enter password", inputClassName: "jac-form-input"},
+                    "agreeToTerms": {label: "I agree to the terms and conditions", type: "checkbox"},
+                    "agreeToNewsletter": {label: "Subscribe to newsletter (optional)", type: "checkbox"}
                 }}
                 submitLabel="Complete Registration"
             />

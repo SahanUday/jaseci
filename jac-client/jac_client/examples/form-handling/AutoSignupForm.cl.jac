@@ -1,16 +1,3 @@
-"""Auto-rendered signup form using JacForm component.
-
-This demonstrates the new Formkit-style form handling approach where
-forms are automatically generated from Zod schemas with zero boilerplate.
-
-Compare this to SignupForm.cl.jac to see the difference:
-- SignupForm.cl.jac: ~318 lines with manual JSX
-- AutoSignupForm.cl.jac: ~60 lines with JacForm auto-rendering
-
-Note: Add the CSS file jacform-default.css to your HTML to use default styles,
-or provide custom className values with your own CSS.
-"""
-
 cl import from "@jac/runtime" { JacForm, jacSchema, useNavigate }
 cl import ".assets.jacform-default.css";
 
@@ -89,6 +76,7 @@ def:pub AutoSignupForm -> JsxElement {
                 field_config={{
                     "email": {
                         label: "Email Address",
+                        type: "email",
                         placeholder: "your@email.com",
                         className: "jac-form-field",
                         inputClassName: "jac-form-input",
@@ -96,6 +84,7 @@ def:pub AutoSignupForm -> JsxElement {
                     },
                     "password": {
                         label: "Password",
+                        type: "password",
                         placeholder: "Minimum 8 characters",
                         className: "jac-form-field",
                         inputClassName: "jac-form-input",
@@ -103,6 +92,7 @@ def:pub AutoSignupForm -> JsxElement {
                     },
                     "confirmPassword": {
                         label: "Confirm Password",
+                        type: "password",
                         placeholder: "Re-enter your password",
                         className: "jac-form-field",
                         inputClassName: "jac-form-input",

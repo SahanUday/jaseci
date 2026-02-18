@@ -29,6 +29,7 @@ form-handling/
 ├── Auto-Rendered Forms (JacForm):
 │   ├── AutoSignupForm.cl.jac   # Auto-rendered signup (~60 lines)
 │   ├── AutoRegForm.cl.jac      # Auto-rendered registration (~110 lines)
+│   ├── AutoEventForm.cl.jac    # Auto-rendered event form with date/datetime/enum fields
 │
 ├── components/
 │   └── Schema.jac              # Reusable validation schemas
@@ -49,6 +50,7 @@ Navigate between examples:
 - **Manual Registration** - Complex multi-field manual form
 - **Auto Signup** ✨ - JacForm auto-rendered signup
 - **Auto Registration** ✨ - JacForm auto-rendered with grid layout
+- **Auto Event Registration** ✨ - JacForm with date, datetime, and select (enum) fields
 
 ---
 
@@ -541,6 +543,17 @@ Navigate between examples using the navigation bar:
 - All validation from schema
 - Built-in error handling
 
+**AutoEventForm (`AutoEventForm.cl.jac`)**
+- Demonstrates advanced field types:
+  - **Date fields** (`eventDate`) - Native date picker
+  - **DateTime fields** (`startDateTime`, `endDateTime`) - Date and time selection
+  - **Select/Enum fields** (`eventType`, `ticketType`, `mealPreference`) - Dropdown menus
+  - **Number fields** (`numberOfAttendees`) - Numeric input with min/max validation
+  - **Boolean fields** (`agreeToTerms`, `marketingConsent`) - Checkboxes
+- Grid layout (2 columns)
+- Optional fields support
+- Complex validation (required checkboxes)
+
 ### Shared Components
 
 **Schema (`components/Schema.jac`)**
@@ -562,8 +575,15 @@ The JacForm component is designed for iterative enhancement. Future versions may
 - Advanced layouts (multi-step, wizard)
 - File upload support
 - Rich text editors
-- Date/time pickers
 - Field dependencies and conditional logic
+
+**Already Supported** ✅:
+- Date and datetime pickers (via native HTML5 inputs)
+- Select/dropdown fields (via `jacSchema.enum()`)
+- Number inputs with validation
+- Boolean checkboxes with validation
+- Optional and required fields
+- Grid, vertical, horizontal, and inline layouts
 
 ---
 

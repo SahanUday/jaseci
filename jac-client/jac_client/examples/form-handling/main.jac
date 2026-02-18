@@ -5,10 +5,9 @@ Demonstrates both manual form handling and auto-rendered forms using JacForm.
 
 # Client-side UI
 cl {
-    import from .RegForm { RegForm }
-    import from .SignupForm { SignupForm }
     import from .AutoSignupForm { AutoSignupForm }
     import from .AutoRegForm { AutoRegForm }
+    import from .AutoEventForm { AutoEventForm }
     import from "@jac/runtime" { Router, Routes, Route, Link }
 
     def:pub app -> JsxElement {
@@ -27,34 +26,6 @@ cl {
                                 Jac Form Handling Examples
                             </h1>
                             <div style={{display: "flex", gap: "1rem", flexWrap: "wrap"}}>
-                                <Link
-                                    to="/"
-                                    style={{
-                                        color: "#3b82f6",
-                                        textDecoration: "none",
-                                        padding: "0.5rem 1rem",
-                                        backgroundColor: "#fff",
-                                        borderRadius: "6px",
-                                        fontSize: "0.9rem",
-                                        fontWeight: "500"
-                                    }}
-                                >
-                                    Manual Signup
-                                </Link>
-                                <Link
-                                    to="/register"
-                                    style={{
-                                        color: "#3b82f6",
-                                        textDecoration: "none",
-                                        padding: "0.5rem 1rem",
-                                        backgroundColor: "#fff",
-                                        borderRadius: "6px",
-                                        fontSize: "0.9rem",
-                                        fontWeight: "500"
-                                    }}
-                                >
-                                    Manual Registration
-                                </Link>
                                 <Link
                                     to="/auto-signup"
                                     style={{
@@ -83,14 +54,27 @@ cl {
                                 >
                                     ✨ Auto Registration (JacForm)
                                 </Link>
+                                <Link
+                                    to="/auto-event"
+                                    style={{
+                                        color: "#10b981",
+                                        textDecoration: "none",
+                                        padding: "0.5rem 1rem",
+                                        backgroundColor: "#fff",
+                                        borderRadius: "6px",
+                                        fontSize: "0.9rem",
+                                        fontWeight: "600"
+                                    }}
+                                >
+                                    ✨ Auto Event Registration (JacForm)
+                                </Link>
                             </div>
                         </div>
                     </nav>
                     <Routes>
-                        <Route path="/" element={<SignupForm />} />
-                        <Route path="/register" element={<RegForm />} />
                         <Route path="/auto-signup" element={<AutoSignupForm />} />
                         <Route path="/auto-register" element={<AutoRegForm />} />
+                        <Route path="/auto-event" element={<AutoEventForm />} />
                     </Routes>
                 </div>
             </Router>;

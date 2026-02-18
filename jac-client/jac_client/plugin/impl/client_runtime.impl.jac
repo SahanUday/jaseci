@@ -376,7 +376,11 @@ impl useJacForm(form_mode: str, schema: any) -> any {
         - schema: Zod schema defining the form fields and validation
         - onSubmit: function to call with form data on submit
         - layout: "vertical" (default), "horizontal", "inline", or "grid"
-        - field_config: dict mapping field names to {label, placeholder, className, inputClassName, labelClassName}
+        - field_config: dict mapping field names to {type, label, placeholder, className, inputClassName, labelClassName}
+            - type: REQUIRED - field type ("text", "email", "password", "number", "date", "datetime-local", "checkbox", "select", etc.)
+            - label: field label (defaults to field name)
+            - placeholder: placeholder text
+            - className, inputClassName, labelClassName: CSS classes for styling
         - submitLabel: custom label for the submit button (default "Submit")
         - submitClassName: custom className for submit button
         - gridColumns: number of columns for grid layout (default 2)
@@ -444,60 +448,15 @@ impl JacForm(props: dict) -> JsxElement {
         return schema;
     }
 
-    # Helper function to detect field type from schema
-    def getFieldType(fieldName: str, fieldSchema: any) -> str {
-        # Check if field name suggests a password
-        if fieldName.toLowerCase().includes("password") {
-            return "password";
-        }
-
-        # Unwrap nested Zod types (optional, default, refine, etc.)
-        unwrappedSchema = unwrapZodSchema(fieldSchema);
-
-        # Check unwrapped schema for specific validators
-        if unwrappedSchema._def {
-            typeValue = unwrappedSchema._def.type;
-
-            # Check for string with specific validators
-            if typeValue == "string" {
-                checks = unwrappedSchema._def.checks if unwrappedSchema._def.checks else [];
-                for check in checks {
-                    if check.kind == "email" {
-                        return "email";
-                    } elif check.kind == "url" {
-                        return "url";
-                    } elif check.kind == "datetime" {
-                        return "datetime-local";
-                    }
-                }
-            }
-            # Check for date
-            if typeValue == "date" {
-                return "date";
-            }
-            # Check for number
-            if typeValue == "number" {
-                return "number";
-            }
-            # Check for boolean
-            if typeValue == "boolean" {
-                return "checkbox";
-            }
-            # Check for enum
-            if typeValue == "enum" {
-                return "select";        # can render as dropdown
-            }
-        }
-        return "text";
-    }
-
     # Helper function to render a single field
     def renderField(fieldName: str) -> JsxElement {
         fieldSchema = schemaShape[fieldName];
-        fieldType = getFieldType(fieldName, fieldSchema);
         
         # Get field configuration
         config = field_config[fieldName] if field_config[fieldName] else {};
+        
+        # Note: "type" gets compiled to "key" in JavaScript to avoid conflicts with React's type prop
+        fieldType = config.key if config.key else "text";
         label = config.label if config.label else fieldName;
         placeholder = config.placeholder if config.placeholder else "";
         fieldClassName = config.className if config.className else "";
@@ -545,28 +504,45 @@ impl JacForm(props: dict) -> JsxElement {
         
         # Select fields (ZodEnum)
         if fieldType == "select" {
-            options = fieldSchema._def.values if fieldSchema._def and fieldSchema._def.values else [];
+            unwrappedSchema = unwrapZodSchema(fieldSchema);
+            # Extract enum values from entries object
+            options = [];
+            
+            if unwrappedSchema._def and unwrappedSchema._def.entries {
+                # entries is an object/dict, get its keys which are the enum values
+                options = Object.keys(unwrappedSchema._def.entries);
+            } elif unwrappedSchema.def and unwrappedSchema.def.entries {
+                options = Object.keys(unwrappedSchema.def.entries);
+            }
+            
+            watchValue = form.watch(fieldName);
+            
             return (
                 <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
                     <label className={labelClassName} style={{display: "block", marginBottom: "0.5rem"}}>
                         {label}
                     </label>
                     <select
-                        {...field}
+                        name={field.name}
+                        ref={field.ref}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        value={watchValue || ""}
                         className={inputClassName}
                         style={{
                             width: "100%",
                             boxSizing: "border-box"
                         }}
                     >
-                        <option value="" disabled >
+                        <option value="">
                             {placeholder if placeholder else f"Select {label}"}
                         </option>
                         {options.map(
                             lambda option:any -> JsxElement {
-                                <option value={option} key={option}>
+                                return <option value={option} key={option}>
                                     {option}
-                                </option>;}
+                                </option>;
+                            }
                         )}
                     </select>
                     {error &&
@@ -597,7 +573,8 @@ impl JacForm(props: dict) -> JsxElement {
                     className={inputClassName}
                     style={{
                         width: "100%",
-                        boxSizing: "border-box"
+                        boxSizing: "border-box",
+                        border: ("2px solid #ef4444" if error else "2px solid #e5e7eb"),
                     }}
                 />
                 {error &&
