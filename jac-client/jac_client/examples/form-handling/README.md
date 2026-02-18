@@ -30,6 +30,7 @@ form-handling/
 │   ├── AutoSignupForm.cl.jac   # Auto-rendered signup (~60 lines)
 │   ├── AutoRegForm.cl.jac      # Auto-rendered registration (~110 lines)
 │   ├── AutoEventForm.cl.jac    # Auto-rendered event form with date/datetime/enum fields
+│   ├── AutoFeedbackForm.cl.jac # Auto-rendered feedback form with radio & textarea
 │
 ├── components/
 │   └── Schema.jac              # Reusable validation schemas
@@ -51,6 +52,7 @@ Navigate between examples:
 - **Auto Signup** ✨ - JacForm auto-rendered signup
 - **Auto Registration** ✨ - JacForm auto-rendered with grid layout
 - **Auto Event Registration** ✨ - JacForm with date, datetime, and select (enum) fields
+- **Feedback Form** ✨ - JacForm with radio buttons and textarea fields
 
 ---
 
@@ -218,16 +220,31 @@ Customize individual fields:
 field_config={{
     "email": {
         label: "Email Address",
+        type: "email",
         placeholder: "your@email.com",
         inputClassName: "jac-form-input"
     },
     "password": {
         label: "Choose Password",
+        type: "password",
         placeholder: "Min 8 characters",
         inputClassName: "jac-form-input"
     },
+    "rating": {
+        label: "How would you rate us?",
+        type: "radio",
+        inputClassName: "jac-form-radio"
+    },
+    "comments": {
+        label: "Your Feedback",
+        type: "textarea",
+        placeholder: "Share your thoughts...",
+        rows: 5,
+        inputClassName: "jac-form-input"
+    },
     "agreeToTerms": {
-        label: "I agree to the terms and conditions"
+        label: "I agree to the terms and conditions",
+        type: "checkbox"
     }
 }}
 ```
@@ -554,6 +571,17 @@ Navigate between examples using the navigation bar:
 - Optional fields support
 - Complex validation (required checkboxes)
 
+**AutoFeedbackForm (`AutoFeedbackForm.cl.jac`)**
+- Demonstrates radio buttons and textarea:
+  - **Radio buttons** (`rating`, `recommend`) - Multiple choice with enum validation
+  - **Textarea fields** (`comments`, `improvements`) - Multi-line text input with configurable rows
+  - **Select fields** (`category`) - Dropdown for categorization
+  - **Checkbox** (`contactMe`) - Optional consent
+- Vertical layout for better readability
+- Min/max character validation for text areas
+- Optional fields with validation
+- Real-world feedback form example
+
 ### Shared Components
 
 **Schema (`components/Schema.jac`)**
@@ -578,8 +606,11 @@ The JacForm component is designed for iterative enhancement. Future versions may
 - Field dependencies and conditional logic
 
 **Already Supported** ✅:
+- Text inputs (text, email, password, tel, url)
 - Date and datetime pickers (via native HTML5 inputs)
 - Select/dropdown fields (via `jacSchema.enum()`)
+- Radio buttons (via `type: "radio"` with enum or custom options)
+- Textarea fields (via `type: "textarea"` with configurable rows)
 - Number inputs with validation
 - Boolean checkboxes with validation
 - Optional and required fields

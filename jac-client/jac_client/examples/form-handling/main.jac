@@ -8,6 +8,7 @@ cl {
     import from .AutoSignupForm { AutoSignupForm }
     import from .AutoRegForm { AutoRegForm }
     import from .AutoEventForm { AutoEventForm }
+    import from .AutoFeedbackForm { AutoFeedbackForm }
     import from "@jac/runtime" { Router, Routes, Route, Link }
 
     def:pub app -> JsxElement {
@@ -68,6 +69,20 @@ cl {
                                 >
                                     ✨ Auto Event Registration (JacForm)
                                 </Link>
+                                <Link
+                                    to="/auto-feedback"
+                                    style={{
+                                        color: "#10b981",
+                                        textDecoration: "none",
+                                        padding: "0.5rem 1rem",
+                                        backgroundColor: "#fff",
+                                        borderRadius: "6px",
+                                        fontSize: "0.9rem",
+                                        fontWeight: "600"
+                                    }}
+                                >
+                                    ✨ Feedback Form (Radio & Textarea)
+                                </Link>
                             </div>
                         </div>
                     </nav>
@@ -75,6 +90,7 @@ cl {
                         <Route path="/auto-signup" element={<AutoSignupForm />} />
                         <Route path="/auto-register" element={<AutoRegForm />} />
                         <Route path="/auto-event" element={<AutoEventForm />} />
+                        <Route path="/auto-feedback" element={<AutoFeedbackForm />} />
                     </Routes>
                 </div>
             </Router>;

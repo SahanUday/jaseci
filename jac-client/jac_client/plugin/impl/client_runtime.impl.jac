@@ -376,10 +376,12 @@ impl useJacForm(form_mode: str, schema: any) -> any {
         - schema: Zod schema defining the form fields and validation
         - onSubmit: function to call with form data on submit
         - layout: "vertical" (default), "horizontal", "inline", or "grid"
-        - field_config: dict mapping field names to {type, label, placeholder, className, inputClassName, labelClassName}
-            - type: REQUIRED - field type ("text", "email", "password", "number", "date", "datetime-local", "checkbox", "select", etc.)
+        - field_config: dict mapping field names to {type, label, placeholder, options, rows, className, inputClassName, labelClassName}
+            - type: REQUIRED - field type ("text", "email", "password", "number", "date", "datetime-local", "checkbox", "select", "radio", "textarea", etc.)
             - label: field label (defaults to field name)
             - placeholder: placeholder text
+            - options: array of options for radio buttons (e.g., ["option1", "option2"])
+            - rows: number of rows for textarea (default 4)
             - className, inputClassName, labelClassName: CSS classes for styling
         - submitLabel: custom label for the submit button (default "Submit")
         - submitClassName: custom className for submit button
@@ -545,6 +547,107 @@ impl JacForm(props: dict) -> JsxElement {
                             }
                         )}
                     </select>
+                    {error &&
+                        <p
+                            style={{
+                                color: "#ef4444",
+                                fontSize: "0.85rem",
+                                marginTop: "0.25rem"
+                            }}
+                        >
+                            ⚠️ {error.message}
+                        </p>
+                    }
+                </div>
+            );
+        }
+        
+        # Radio button fields
+        if fieldType == "radio" {
+            unwrappedSchema = unwrapZodSchema(fieldSchema);
+            # Extract options from config or enum schema
+            options = [];
+            
+            # Otherwise try to extract from enum schema
+            if unwrappedSchema._def and unwrappedSchema._def.entries {
+                options = Object.keys(unwrappedSchema._def.entries);
+            } elif unwrappedSchema.def and unwrappedSchema.def.entries {
+                options = Object.keys(unwrappedSchema.def.entries);
+            }
+            
+            watchValue = form.watch(fieldName);
+            
+            return (
+                <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
+                    <label className={labelClassName} style={{display: "block", marginBottom: "0.5rem", fontWeight: "500"}}>
+                        {label}
+                    </label>
+                    <div style={{display: "flex", flexDirection: "column", gap: "0.5rem"}}>
+                        {options.map(
+                            lambda option:any -> JsxElement {
+                                return <label 
+                                    key={option} 
+                                    style={{
+                                        cursor: "pointer", 
+                                        display: "flex", 
+                                        alignItems: "center", 
+                                        gap: "0.5rem"
+                                    }}
+                                >
+                                    <input
+                                        type={fieldType}
+                                        name={field.name}
+                                        value={option}
+                                        ref={field.ref}
+                                        onChange={field.onChange}
+                                        onBlur={field.onBlur}
+                                        checked={watchValue == option}
+                                        className={inputClassName}
+                                        style={{cursor: "pointer"}}
+                                    />
+                                    <span>{option}</span>
+                                </label>;
+                            }
+                        )}
+                    </div>
+                    {error &&
+                        <p
+                            style={{
+                                color: "#ef4444",
+                                fontSize: "0.85rem",
+                                marginTop: "0.25rem"
+                            }}
+                        >
+                            ⚠️ {error.message}
+                        </p>
+                    }
+                </div>
+            );
+        }
+        
+        # Textarea fields
+        if fieldType == "textarea" {
+            rows = config.rows if config.rows else 4;
+            return (
+                <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
+                    <label className={labelClassName} style={{display: "block", marginBottom: "0.5rem"}}>
+                        {label}
+                    </label>
+                    <textarea
+                        placeholder={placeholder}
+                        rows={rows}
+                        {...field}
+                        className={inputClassName}
+                        style={{
+                            width: "100%",
+                            boxSizing: "border-box",
+                            border: ("2px solid #ef4444" if error else "2px solid #e5e7eb"),
+                            padding: "0.5rem",
+                            fontFamily: "inherit",
+                            fontSize: "inherit",
+                            resize: "vertical"
+                        }}
+                    />
                     {error &&
                         <p
                             style={{
