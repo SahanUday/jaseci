@@ -6,7 +6,7 @@ cl {
         return
             <Router>
                 <Routes>
-                    <Route path="/" element={<FieldExamples />} />
+                    <Route path="/" element={<FieldExamples/>}/>
                 </Routes>
             </Router>;
     }

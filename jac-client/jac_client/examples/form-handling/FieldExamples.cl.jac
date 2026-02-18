@@ -2,66 +2,63 @@ cl import from "@jac/runtime" { JacForm, jacSchema }
 cl import ".assets.jacform-default.css";
 
 def:pub FieldExamples -> JsxElement {
-    schema = jacSchema.object({
-        # Text inputs
-        textField: jacSchema.string().min(2, "Min 2 characters"),
-        emailField: jacSchema.string().email("Invalid email"),
-        telField: jacSchema.string().min(10, "Min 10 digits").regex(
-            RegExp("^[0-9\\-\\+\\(\\)\\s]*$"),
-            "Phone number contains invalid characters"
-        ),
-        urlField: jacSchema.string().url("Invalid URL"),
-        # Password with regex validation and toggle
-        passwordField: jacSchema.string().min(
-            8, "Password must be at least 8 characters"
-        ).regex(
-            RegExp("[A-Z]"),
-            "Password must contain at least one uppercase letter"
-        ).regex(
-            RegExp("[a-z]"),
-            "Password must contain at least one lowercase letter"
-        ).regex(
-            RegExp("[0-9]"), "Password must contain at least one number"
-        ).regex(
-            RegExp("[!@#\\$%\\^&\\*]"),
-            "Password must contain at least one special character (!@#$%^&*)"
-        ),
-        confirmPassword: jacSchema.string().min(
-            8, "Confirm password must be at least 8 characters"
-        ).refine(
-            lambda data:any -> bool { return data.passwordField == data.confirmPassword; },
-            "Passwords do not match"
-        ),
-        # Number and date/time inputs
-        numberField: jacSchema.number().min(1, "Min 1").max(100, "Max 100"),
-        dateField: jacSchema.string().min(1, "Date required"),
-        datetimeField: jacSchema.string().min(1, "DateTime required"),
-        # Select (enum)
-        selectField: jacSchema.enum(
-            ["option1", "option2", "option3"],
-            "Please select an option"
-        ),
-        # Radio buttons (enum)
-        radioField: jacSchema.enum(
-            ["yes", "no", "maybe"],
-            "Please select"
-        ),
-        # Textarea
-        textareaField: jacSchema.string().min(10, "Min 10 characters"),
-        # Checkboxes
-        checkboxRequired: jacSchema.boolean().refine(
-            lambda v: any -> bool { return v == True; },
-            "Must be checked"
-        ),
-        checkboxOptional: jacSchema.boolean().optional()
-    });
+    schema = jacSchema.object(
+        {
+            # Text inputs
+            textField: jacSchema.string().min(2, "Min 2 characters"),
+            emailField: jacSchema.string().email("Invalid email"),
+            telField: jacSchema.string().min(10, "Min 10 digits").regex(
+                RegExp("^[0-9\\-\\+\\(\\)\\s]*$"),
+                "Phone number contains invalid characters"
+            ),
+            urlField: jacSchema.string().url("Invalid URL"),
+            # Password with regex validation and toggle
+            passwordField: jacSchema.string().min(
+                8, "Password must be at least 8 characters"
+            ).regex(
+                RegExp("[A-Z]"), "Password must contain at least one uppercase letter"
+            ).regex(
+                RegExp("[a-z]"), "Password must contain at least one lowercase letter"
+            ).regex(
+                RegExp("[0-9]"), "Password must contain at least one number"
+            ).regex(
+                RegExp("[!@#\\$%\\^&\\*]"),
+                "Password must contain at least one special character (!@#$%^&*)"
+            ),
+            confirmPassword: jacSchema.string().min(
+                8, "Confirm password must be at least 8 characters"
+            ),
+            # Number and date/time inputs
+            numberField: jacSchema.number().min(1, "Min 1").max(100, "Max 100"),
+            dateField: jacSchema.string().min(1, "Date required"),
+            datetimeField: jacSchema.string().min(1, "DateTime required"),
+            # Select (enum)
+            selectField: jacSchema.enum(
+                ["option1", "option2", "option3"], "Please select an option"
+            ),
+            # Radio buttons (enum)
+            radioField: jacSchema.enum(["yes", "no", "maybe"], "Please select"),
+            # Textarea
+            textareaField: jacSchema.string().min(10, "Min 10 characters"),
+            # Checkboxes
+            checkboxRequired: jacSchema.boolean().refine(
+                lambda v: any  -> bool { return v == True; }, "Must be checked"
+            ),
+            checkboxOptional: jacSchema.boolean().optional()
+        }
+    ).refine(
+        lambda data: any  -> bool { return data.passwordField == data.confirmPassword; },
+        {message: "Passwords do not match", path: ["confirmPassword"],}
+    );
     async def handleSubmit(data: any) -> None {
         console.log("Form submitted:", data);
         alert("Form submitted! Check console for data.");
     }
     return (
         <div style={{maxWidth: "800px", margin: "2rem auto", padding: "2rem"}}>
-            <h1 style={{textAlign: "center", marginBottom: "0.5rem"}}>JacForm Field Examples</h1>
+            <h1 style={{textAlign: "center", marginBottom: "0.5rem"}}>
+                JacForm Field Examples
+            </h1>
             <p style={{textAlign: "center", color: "#666", marginBottom: "2rem"}}>
                 Comprehensive demonstration of all supported field types
             </p>
@@ -109,51 +106,85 @@ def:pub FieldExamples -> JsxElement {
                         type: "number",
                         placeholder: "1-100"
                     },
-                    "dateField": {
-                        label: "Date Field",
-                        type: "date"
-                    },
-                    "datetimeField": {
-                        label: "DateTime Field",
-                        type: "datetime-local"
-                    },
+                    "dateField": {label: "Date Field", type: "date"},
+                    "datetimeField": {label: "DateTime Field", type: "datetime-local"},
                     "selectField": {
                         label: "Select Field (Dropdown)",
                         type: "select",
                         placeholder: "Choose an option"
                     },
-                    "radioField": {
-                        label: "Radio Buttons",
-                        type: "radio"
-                    },
+                    "radioField": {label: "Radio Buttons", type: "radio"},
                     "textareaField": {
                         label: "Textarea Field",
                         type: "textarea",
                         placeholder: "Enter multiple lines of text...",
                         rows: 4
                     },
-                    "checkboxRequired": {
-                        label: "Required Checkbox",
-                        type: "checkbox"
-                    },
-                    "checkboxOptional": {
-                        label: "Optional Checkbox",
-                        type: "checkbox"
-                    }
+                    "checkboxRequired": {label: "Required Checkbox", type: "checkbox"},
+                    "checkboxOptional": {label: "Optional Checkbox", type: "checkbox"}
                 }}
                 submitLabel="Submit Form"
             />
-            <div style={{marginTop: "3rem", padding: "1.5rem", backgroundColor: "#f9fafb", borderRadius: "8px"}}>
-                <h3 style={{marginTop: "0"}}>Field Configurations Shown</h3>
+            <div
+                style={{
+                    marginTop: "3rem",
+                    padding: "1.5rem",
+                    backgroundColor: "#f9fafb",
+                    borderRadius: "8px"
+                }}
+            >
+                <h3 style={{marginTop: "0"}}>
+                    Field Configurations Shown
+                </h3>
                 <ul style={{lineHeight: "1.8"}}>
-                    <li><strong>Text inputs:</strong> text, email, tel (with regex), url</li>
-                    <li><strong>Password:</strong> regex validation (uppercase, lowercase, number, special char) + showPasswordToggle</li>
-                    <li><strong>Confirm Password:</strong> cross-field validation to match password</li>
-                    <li><strong>Number & Date:</strong> number, date, datetime-local</li>
-                    <li><strong>Select:</strong> dropdown from enum schema</li>
-                    <li><strong>Radio:</strong> radio buttons from enum schema</li>
-                    <li><strong>Textarea:</strong> with configurable rows</li>
-                    <li><strong>Checkbox:</strong> required and optional variants</li>
+                    <li>
+                        <strong>
+                            Text inputs:
+                        </strong>
+                         text, email, tel (with regex), url
+                    </li>
+                    <li>
+                        <strong>
+                            Password:
+                        </strong>
+                         regex validation (uppercase, lowercase, number, special char) + showPasswordToggle
+                    </li>
+                    <li>
+                        <strong>
+                            Confirm Password:
+                        </strong>
+                         cross-field validation to match password
+                    </li>
+                    <li>
+                        <strong>
+                            Number & Date:
+                        </strong>
+                         number, date, datetime-local
+                    </li>
+                    <li>
+                        <strong>
+                            Select:
+                        </strong>
+                         dropdown from enum schema
+                    </li>
+                    <li>
+                        <strong>
+                            Radio:
+                        </strong>
+                         radio buttons from enum schema
+                    </li>
+                    <li>
+                        <strong>
+                            Textarea:
+                        </strong>
+                         with configurable rows
+                    </li>
+                    <li>
+                        <strong>
+                            Checkbox:
+                        </strong>
+                         required and optional variants
+                    </li>
                 </ul>
                 <p style={{marginBottom: "0", color: "#666"}}>
                     All fields include automatic validation based on schema definitions.
