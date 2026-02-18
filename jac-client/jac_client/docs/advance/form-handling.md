@@ -299,6 +299,7 @@ def:pub RegistrationForm -> JsxElement {
         console.log("Submitted:", data);
     }
 
+
     return (
         <JacForm
             schema={schema}
@@ -380,9 +381,9 @@ For detailed examples, see the [form-handling example project](../../examples/fo
         email: jacSchema.string().email("Invalid email"),
         password: jacSchema.string().min(8, "Min 8 characters")
     });
-    
+
     form = useJacForm("onTouched", schema);
-    
+
     return (
         <form onSubmit={form.handleSubmit(handleSubmit)}>
             <input {...form.register("email")} />
@@ -396,6 +397,7 @@ For detailed examples, see the [form-handling example project](../../examples/fo
 ### Learn More
 
 For comprehensive examples of manual form handling including:
+
 - Form state management
 - Field registration patterns
 - Real-time validation
@@ -403,6 +405,7 @@ For comprehensive examples of manual form handling including:
 - Custom field components
 
 See the complete working examples in the [form-handling example project](../../examples/form-handling/):
+
 - **[SignupForm.cl.jac](../../examples/form-handling/SignupForm.cl.jac)** - Full manual signup form
 - **[RegForm.cl.jac](../../examples/form-handling/RegForm.cl.jac)** - Complex registration with 14+ fields
 
@@ -568,10 +571,10 @@ schema = jacSchema.object({
         lambda v -> bool { return v == True; },
         "You must agree to terms"
     ),
-    
+
     # Optional checkbox
     newsletter: jacSchema.boolean().optional(),
-    
+
     # Checkbox with default
     notifications: jacSchema.boolean().default(true)
 });
@@ -801,6 +804,7 @@ form = useJacForm(validateMode: string, schema: ZodSchema)
 ```
 
 **Returns:**
+
 - `form.register(fieldName)` - Register a field
 - `form.watch(fieldName)` - Watch field value
 - `form.handleSubmit(onSubmit)` - Submit handler
