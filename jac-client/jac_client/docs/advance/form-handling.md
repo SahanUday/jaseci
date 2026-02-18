@@ -9,8 +9,9 @@ Auto-rendered, type-safe forms with JacForm - zero boilerplate, full validation.
 **JacForm** auto-generates complete form UIs from Zod schemas with built-in validation, error handling, and flexible layouts.
 
 **Key Features:**
+
 - Auto-render forms from schemas (~80% less code)
-- Built-in validation 
+- Built-in validation
 - Multiple layouts (vertical, grid, horizontal, inline)
 - Built-in password toggle, validation errors
 - Minimal styling, fully customizable
@@ -53,6 +54,7 @@ def:pub MyForm -> JsxElement {
 | `validateMode` | `string` | `"onTouched"` | Validation timing: `onChange`, `onBlur`, `onTouched`, `onSubmit` |
 
 **Example**
+
 ```jac
 <JacForm
     schema={ZodSchema}       # Required: Zod validation schema
@@ -66,8 +68,10 @@ def:pub MyForm -> JsxElement {
     validateMode={string}    # Optional: Validation timing
 />
 ```
+
 ---
-### jacSchema 
+
+### jacSchema
 
 | Method | Usage |
 |--------|-------|
@@ -226,8 +230,8 @@ schema = jacSchema.object({
     password: jacSchema.string().min(8),
     confirmPassword: jacSchema.string().min(8)
 }).refine(
-    lambda data: any -> bool { 
-        return data.password == data.confirmPassword; 
+    lambda data: any -> bool {
+        return data.password == data.confirmPassword;
     },
     {
         message: "Passwords must match",
@@ -256,6 +260,7 @@ field_config={{
     }
 }}
 ```
+
 ---
 
 ## Styling
@@ -294,6 +299,7 @@ field_config={{
     }
 }}
 ```
+
 ---
 
 ## Working Examples
