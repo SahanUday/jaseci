@@ -1,303 +1,382 @@
 # Form Handling in Jac Client
 
-Build robust, type-safe forms with built-in validation and automatic UI generation using Jac Client's form handling abstractions.
-
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Two Approaches to Forms](#two-approaches-to-forms)
-- [Getting Started](#getting-started)
-- [JacForm: Auto-Rendered Forms](#jacform-auto-rendered-forms)
-- [Manual Forms with useJacForm](#manual-forms-with-usejacform)
-- [Schema Definition with jacSchema](#schema-definition-with-jacschema)
-- [Field Type Detection](#field-type-detection)
-- [Validation](#validation)
-- [Styling](#styling)
-- [API Reference](#api-reference)
+Auto-rendered, type-safe forms with JacForm - zero boilerplate, full validation.
 
 ---
 
 ## Overview
 
-Jac Client provides two powerful approaches to form handling:
+**JacForm** auto-generates complete form UIs from Zod schemas with built-in validation, error handling, and flexible layouts.
 
-1. **Auto-Rendered Forms** (`JacForm`) - Zero-config form generation from schemas
-2. **Manual Forms** (`useJacForm`) - Full control over form JSX and layout
-
-Both approaches share the same foundation:
-- **Type-safe validation** with Zod schemas
-- **react-hook-form** under the hood for optimal performance
-- **Real-time validation** with customizable validation modes
-- **Declarative schema definitions** using `jacSchema`
-
-**Key Benefits:**
-
-- **Reduce Boilerplate**: ~80% less code with JacForm compared to manual forms
-- **Type Safety**: Schema-based validation catches errors at development time
-- **Performance**: Optimized re-renders with react-hook-form
-- **DX**: Declarative, readable code that's easy to maintain
-- **Flexible**: Choose auto-rendering for speed, manual for customization
+**Key Features:**
+- Auto-render forms from schemas (~80% less code)
+- Type-safe validation with Zod
+- Multiple layouts (vertical, grid, horizontal, inline)
+- Built-in password toggle, validation errors
+- Minimal styling, fully customizable
 
 ---
 
-## Two Approaches to Forms
-
-### When to Use JacForm (Auto-Rendered)
-
-✅ **Best for:**
-- Standard CRUD forms
-- Admin panels and dashboards
-- Rapid prototyping
-- Forms with consistent styling
-- Data entry forms
-
-**Pros:**
-- Minimal code (~80% reduction)
-- Automatic field rendering
-- Built-in validation error display
-- Consistent UI across forms
-- Easy to maintain
-
-**Cons:**
-- Less control over individual field layout
-- Custom field types require field_config
-- Not ideal for complex multi-step forms
-
-### When to Use useJacForm (Manual)
-
-✅ **Best for:**
-- Highly customized UIs
-- Complex multi-step wizards
-- Forms with conditional field rendering
-- Custom field components
-- Unique design requirements
-
-**Pros:**
-- Complete control over JSX
-- Custom field components
-- Complex conditional logic
-- Pixel-perfect designs
-
-**Cons:**
-- More verbose code
-- Manual error handling
-- Repetitive field registration
-
----
-
-## Getting Started
-
-### Installation
-
-Form handling utilities are built into `@jac/runtime`:
-
-```jac
-cl import from "@jac/runtime" {
-    JacForm,        # Auto-rendered form component
-    useJacForm,     # Manual form hook
-    jacSchema       # Zod schema wrapper (alias for z)
-}
-```
-
-### Quick Start: Auto-Rendered Form
+## Quick Start
 
 ```jac
 cl import from "@jac/runtime" { JacForm, jacSchema }
 
-def:pub SignupForm -> JsxElement {
-    # Define schema
+def:pub MyForm -> JsxElement {
     schema = jacSchema.object({
         email: jacSchema.string().email("Invalid email"),
         password: jacSchema.string().min(8, "Min 8 characters")
     });
-    
-    # Handle submission
+
     async def handleSubmit(data: any) -> None {
-        console.log("Form data:", data);
+        console.log("Submitted:", data);
     }
-    
-    return (
-        <JacForm
-            schema={schema}
-            onSubmit={handleSubmit}
-            submitLabel="Sign Up"
-        />
-    );
+
+    return <JacForm schema={schema} onSubmit={handleSubmit} />;
 }
 ```
-
-That's it! You get a fully functional form with validation in ~15 lines of code.
 
 ---
 
-## JacForm: Auto-Rendered Forms
-
-`JacForm` is a powerful component that automatically generates form UI from your Zod schema.
-
-### Basic Usage
-
-```jac
-<JacForm
-    schema={mySchema}
-    onSubmit={handleSubmit}
-/>
-```
-
-### Complete Example with All Options
-
-```jac
-cl import from "@jac/runtime" { JacForm, jacSchema }
-
-def:pub RegistrationForm -> JsxElement {
-    # Define comprehensive schema
-    schema = jacSchema.object({
-        firstName: jacSchema.string().min(1, "Required"),
-        lastName: jacSchema.string().min(1, "Required"),
-        email: jacSchema.string().email("Invalid email"),
-        phone: jacSchema.string().min(10, "Min 10 digits"),
-        agreeToTerms: jacSchema.boolean().refine(
-            lambda v -> bool { return v == True; },
-            "You must agree to terms"
-        ),
-        newsletter: jacSchema.boolean().optional()
-    }).refine(
-        lambda data -> bool { return data.password == data.confirmPassword; },
-        { message: "Passwords must match", path: ["confirmPassword"] }
-    );
-    
-    async def handleSubmit(data: any) -> None {
-        console.log("Registration data:", data);
-    }
-    
-    return (
-        <JacForm
-            schema={schema}
-            onSubmit={handleSubmit}
-            layout="grid"
-            gridColumns={2}
-            className="registration-form"
-            submitClassName="submit-button"
-            submitLabel="Create Account"
-            validateMode="onTouched"
-            field_config={{
-                "firstName": {
-                    label: "First Name",
-                    placeholder: "John",
-                    inputClassName: "input-field"
-                },
-                "lastName": {
-                    label: "Last Name",
-                    placeholder: "Doe"
-                },
-                "agreeToTerms": {
-                    label: "I agree to the terms and conditions"
-                }
-            }}
-        />
-    );
-}
-```
-
-### Props Reference
+## JacForm Props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `schema` | ZodSchema | required | Zod schema defining form structure and validation |
-| `onSubmit` | function | required | Async function called with validated form data |
-| `layout` | string | `"vertical"` | Layout type: `"vertical"`, `"grid"`, `"horizontal"`, `"inline"` |
-| `gridColumns` | number | `2` | Number of columns when layout is `"grid"` |
-| `field_config` | dict | `{}` | Per-field configuration (label, placeholder, className) |
-| `submitLabel` | string | `"Submit"` | Text for submit button |
-| `submitClassName` | string | `""` | CSS class for submit button |
-| `className` | string | `""` | CSS class for form element |
-| `validateMode` | string | `"onTouched"` | When to validate: `"onChange"`, `"onBlur"`, `"onTouched"`, `"onSubmit"` |
+| `schema` | `ZodSchema` | **required** | Zod validation schema defining form structure |
+| `onSubmit` | `function` | **required** | Async handler called with validated data |
+| `layout` | `string` | `"vertical"` | Layout: `vertical`, `grid`, `horizontal`, `inline` |
+| `gridColumns` | `number` | `2` | Columns for grid layout |
+| `field_config` | `dict` | `{}` | Per-field customization (label, type, placeholder, etc.) |
+| `submitLabel` | `string` | `"Submit"` | Submit button text |
+| `submitClassName` | `string` | `""` | CSS class for submit button |
+| `className` | `string` | `""` | CSS class for form element |
+| `validateMode` | `string` | `"onTouched"` | Validation timing: `onChange`, `onBlur`, `onTouched`, `onSubmit` |
 
-### Layouts
+---
 
-#### Vertical (Default)
+## Supported Field Types
 
-```jac
-<JacForm
-    schema={schema}
-    onSubmit={handleSubmit}
-    layout="vertical"
-/>
-```
+| Type | Schema Example | Config | Notes |
+|------|---------------|--------|-------|
+| **Text** | `jacSchema.string()` | `type: "text"` | Default field type |
+| **Email** | `jacSchema.string().email()` | `type: "email"` | With validation |
+| **Password** | `jacSchema.string()` | `type: "password"` | Supports `showPasswordToggle` |
+| **Tel** | `jacSchema.string()` | `type: "tel"` | Phone number input |
+| **URL** | `jacSchema.string().url()` | `type: "url"` | With validation |
+| **Number** | `jacSchema.number()` | `type: "number"` | Numeric input with min/max |
+| **Date** | `jacSchema.string()` | `type: "date"` | Native date picker |
+| **DateTime** | `jacSchema.string()` | `type: "datetime-local"` | Date and time picker |
+| **Select** | `jacSchema.enum([...])` | `type: "select"` | Dropdown from enum values |
+| **Radio** | `jacSchema.enum([...])` | `type: "radio"` | Radio buttons from enum values |
+| **Textarea** | `jacSchema.string()` | `type: "textarea"`, `rows: 4` | Multi-line text |
+| **Checkbox** | `jacSchema.boolean()` | `type: "checkbox"` | Works with `.optional()`, `.refine()` |
 
-Fields stack vertically, one per row.
+---
 
-#### Grid
+## Field Configuration
 
-```jac
-<JacForm
-    schema={schema}
-    onSubmit={handleSubmit}
-    layout="grid"
-    gridColumns={2}
-/>
-```
+Each field in `field_config` accepts:
 
-Fields arranged in a responsive grid.
+| Property | Type | Description |
+|----------|------|-------------|
+| `type` | `string` | **Required** - Field type (see table above) |
+| `label` | `string` | Display label for the field |
+| `placeholder` | `string` | Placeholder text |
+| `rows` | `number` | Textarea rows (default: 4) |
+| `showPasswordToggle` | `boolean` | Show password visibility toggle (default: false) |
+| `className` | `string` | CSS class for field wrapper |
+| `inputClassName` | `string` | CSS class for input/select/textarea element |
+| `labelClassName` | `string` | CSS class for label element |
 
-#### Horizontal
-
-```jac
-<JacForm
-    schema={schema}
-    onSubmit={handleSubmit}
-    layout="horizontal"
-/>
-```
-
-Fields arranged horizontally with wrapping.
-
-#### Inline
-
-```jac
-<JacForm
-    schema={schema}
-    onSubmit={handleSubmit}
-    layout="inline"
-/>
-```
-
-Compact inline layout for search bars or filters.
-
-### Field Configuration
-
-Customize individual fields with `field_config`:
+**Example:**
 
 ```jac
 field_config={{
     "email": {
-        label: "Email Address",           # Custom label
-        placeholder: "you@example.com",   # Placeholder text
-        className: "email-field",         # Field container class
-        inputClassName: "email-input",    # Input element class
-        labelClassName: "email-label"     # Label element class
+        label: "Email Address",
+        type: "email",
+        placeholder: "you@example.com",
+        inputClassName: "input-style"
     },
     "password": {
-        label: "Choose Password",
-        placeholder: "Min 8 characters"
+        label: "Password",
+        type: "password",
+        showPasswordToggle: True
     }
 }}
 ```
 
 ---
 
-## Manual Forms with useJacForm
+## Layouts
 
-For complete control over form UI, use the `useJacForm` hook. This approach gives you full control over JSX rendering, custom layouts, and complex conditional logic.
+| Layout | Usage | Best For |
+|--------|-------|----------|
+| `vertical` | `layout="vertical"` (default) | Mobile-first, single column forms |
+| `grid` | `layout="grid"` `gridColumns={2}` | Multi-column desktop forms |
+| `horizontal` | `layout="horizontal"` | Side-by-side fields with wrapping |
+| `inline` | `layout="inline"` | Compact search bars, filters |
 
-### Quick Example
+---
+
+## Schema Validation
+
+### String Validation
 
 ```jac
-cl import from "@jac/runtime" { useJacForm, jacSchema }
+email = jacSchema.string()
+    .min(1, "Required")
+    .email("Invalid email");
 
-def:pub LoginForm -> JsxElement {
+password = jacSchema.string()
+    .min(8, "Min 8 chars")
+    .regex(RegExp("[A-Z]"), "Need uppercase")
+    .regex(RegExp("\\d"), "Need number");
+
+phone = jacSchema.string()
+    .regex(RegExp("^[0-9]{10}$"), "10 digits required");
+```
+
+### Number Validation
+
+```jac
+age = jacSchema.number()
+    .min(18, "Must be 18+")
+    .max(120, "Invalid age");
+
+quantity = jacSchema.number()
+    .int("Must be integer")
+    .positive("Must be positive");
+```
+
+### Enum Fields (Select/Radio)
+
+```jac
+role = jacSchema.enum(
+    ["admin", "user", "guest"],
+    "Please select a role"
+);
+
+# Config
+field_config={{
+    "role": {
+        label: "User Role",
+        type: "select",  # or "radio"
+        placeholder: "Choose role"
+    }
+}}
+```
+
+### Boolean Fields (Checkbox)
+
+```jac
+# Required checkbox
+agreeToTerms = jacSchema.boolean().refine(
+    lambda v: any -> bool { return v == True; },
+    "Must agree to terms"
+);
+
+# Optional checkbox
+newsletter = jacSchema.boolean().optional();
+```
+
+### Optional & Default Values
+
+```jac
+middleName = jacSchema.string().optional();
+country = jacSchema.string().default("USA");
+notifications = jacSchema.boolean().default(false);
+```
+
+### Cross-Field Validation
+
+```jac
+schema = jacSchema.object({
+    password: jacSchema.string().min(8),
+    confirmPassword: jacSchema.string().min(8)
+}).refine(
+    lambda data: any -> bool { 
+        return data.password == data.confirmPassword; 
+    },
+    {
+        message: "Passwords must match",
+        path: ["confirmPassword"]
+    }
+);
+```
+
+---
+
+## Password Visibility Toggle
+
+Built-in password toggle - independent state per field:
+
+```jac
+field_config={{
+    "password": {
+        label: "Password",
+        type: "password",
+        showPasswordToggle: True  # Shows "Show password" checkbox
+    },
+    "confirmPassword": {
+        label: "Confirm Password",
+        type: "password",
+        showPasswordToggle: True  # Independent toggle
+    }
+}}
+```
+
+---
+
+## Styling
+
+JacForm uses minimal inline styles (only for functionality). All cosmetic styling via CSS classes.
+
+### Default Theme
+
+```jac
+cl import from "./assets/jacform-default.css";
+
+<JacForm
+    className="jac-form"
+    submitClassName="jac-form-submit"
+    field_config={{
+        "email": { inputClassName: "jac-form-input" }
+    }}
+/>
+```
+
+### Custom Styling
+
+```css
+/* custom.css */
+.my-form { max-width: 600px; margin: 0 auto; }
+.my-input { padding: 0.5rem; border: 1px solid #ccc; }
+.my-submit { background: blue; color: white; padding: 0.5rem 1rem; }
+```
+
+```jac
+cl import from "./custom.css";
+
+<JacForm
+    className="my-form"
+    submitClassName="my-submit"
+    field_config={{
+        "email": { inputClassName: "my-input" }
+    }}
+/>
+```
+
+### Per-Field Styling
+
+```jac
+field_config={{
+    "email": {
+        className: "field-wrapper",
+        inputClassName: "primary-input",
+        labelClassName: "primary-label"
+    }
+}}
+```
+
+---
+
+## Complete Example
+
+```jac
+cl import from "@jac/runtime" { JacForm, jacSchema }
+
+def:pub RegistrationForm -> JsxElement {
     schema = jacSchema.object({
+        email: jacSchema.string().email("Invalid email"),
+        password: jacSchema.string().min(8, "Min 8 characters"),
+        age: jacSchema.number().min(18, "Must be 18+"),
+        role: jacSchema.enum(["user", "admin"], "Required"),
+        newsletter: jacSchema.boolean().optional()
+    });
+
+    async def handleSubmit(data: any) -> None {
+        console.log("Submitted:", data);
+    }
+
+    return (
+        <JacForm
+            schema={schema}
+            onSubmit={handleSubmit}
+            layout="vertical"
+            submitLabel="Sign Up"
+            field_config={{
+                "email": {label: "Email", type: "email", placeholder: "you@example.com"},
+                "password": {label: "Password", type: "password", showPasswordToggle: True},
+                "age": {label: "Age", type: "number", placeholder: "18+"},
+                "role": {label: "Role", type: "select", placeholder: "Choose role"},
+                "newsletter": {label: "Subscribe to newsletter", type: "checkbox"}
+            }}
+        />
+    );
+}
+```
+
+---
+
+## Working Examples
+
+For comprehensive examples demonstrating all field types and features, see:
+
+**[Form Handling Example Project](../../examples/form-handling/)**
+
+- All field types (text, email, password, number, date, datetime, select, radio, textarea, checkbox, tel, url)
+- Password visibility toggle
+- Validation patterns
+- Layout options
+- Custom styling
+
+---
+
+## API Reference
+
+### jacSchema (Zod)
+
+| Method | Usage |
+|--------|-------|
+| `.string()` | String type |
+| `.number()` | Number type |
+| `.boolean()` | Boolean type |
+| `.enum([...])` | Enum type (select/radio) |
+| `.object({...})` | Object schema |
+| `.min(n, msg)` | Min length/value |
+| `.max(n, msg)` | Max length/value |
+| `.email(msg)` | Email validation |
+| `.url(msg)` | URL validation |
+| `.regex(pattern, msg)` | Regex validation |
+| `.optional()` | Make field optional |
+| `.default(value)` | Default value |
+| `.refine(fn, msg)` | Custom validation |
+
+---
+
+## Best Practices
+
+1. **Use `"onTouched"` validation** - Best UX, validates after user interacts with field
+2. **Provide clear error messages** - "Email is required" better than "Required"  
+3. **Use enums for dropdowns/radios** - Type-safe, auto-renders options
+4. **Leverage CSS classes** - Separate styling from logic
+5. **Keep schemas reusable** - Define in separate files, import as needed
+
+---
+
+## Summary
+
+JacForm provides powerful, declarative form handling with minimal code:
+
+- **Auto-rendering** from schemas
+- **Type-safe validation** with Zod
+- **Flexible layouts** and styling
+- **Built-in features** (password toggle, error display)
+- **~80% less code** than manual forms
+
+For detailed examples, see the [form-handling example project](../../examples/form-handling/).
+
         email: jacSchema.string().email("Invalid email"),
         password: jacSchema.string().min(8, "Min 8 characters")
     });
@@ -794,15 +873,12 @@ field_config={{
 
 ## Summary
 
-Jac Client provides powerful, flexible form handling with two approaches:
+JacForm provides powerful, declarative form handling with minimal code:
 
-- **JacForm** - Auto-generate forms from schemas with minimal code
-- **useJacForm** - Full control over form UI for custom requirements
+- **Auto-rendering** from schemas
+- **Type-safe validation** with Zod
+- **Flexible layouts** and styling
+- **Built-in features** (password toggle, error display)
+- **~80% less code** than manual forms
 
-Both approaches share:
-- Type-safe validation with Zod
-- Optimized performance with react-hook-form
-- Declarative, maintainable code
-- Excellent developer experience
-
-Choose the approach that best fits your needs, and enjoy building robust forms with confidence! 🚀
+For detailed examples, see the [form-handling example project](../../examples/form-handling/).

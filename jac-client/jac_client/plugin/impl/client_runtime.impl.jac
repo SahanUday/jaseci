@@ -376,12 +376,13 @@ impl useJacForm(form_mode: str, schema: any) -> any {
         - schema: Zod schema defining the form fields and validation
         - onSubmit: function to call with form data on submit
         - layout: "vertical" (default), "horizontal", "inline", or "grid"
-        - field_config: dict mapping field names to {type, label, placeholder, options, rows, className, inputClassName, labelClassName}
+        - field_config: dict mapping field names to {type, label, placeholder, options, rows, showPasswordToggle, className, inputClassName, labelClassName}
             - type: REQUIRED - field type ("text", "email", "password", "number", "date", "datetime-local", "checkbox", "select", "radio", "textarea", etc.)
             - label: field label (defaults to field name)
             - placeholder: placeholder text
             - options: array of options for radio buttons (e.g., ["option1", "option2"])
             - rows: number of rows for textarea (default 4)
+            - showPasswordToggle: boolean - show "Show password" checkbox for password fields (default false)
             - className, inputClassName, labelClassName: CSS classes for styling
         - submitLabel: custom label for the submit button (default "Submit")
         - submitClassName: custom className for submit button
@@ -421,6 +422,8 @@ impl JacForm(props: dict) -> JsxElement {
     errors = form.formState.errors;
     isSubmitting = form.formState.isSubmitting;
     isDirty = form.formState.isDirty;
+    # # State for password visibility (separate state for each field)
+    [passwordVisible, setPasswordVisible] = useState({});
 
     # Helper function to recursively unwrap Zod wrapper types
     def unwrapZodSchema(schema: any, depth: int = 0) -> any {
@@ -450,80 +453,61 @@ impl JacForm(props: dict) -> JsxElement {
         return schema;
     }
 
-    # Helper function to render a single field
-    def renderField(fieldName: str) -> JsxElement {
-        fieldSchema = schemaShape[fieldName];
-        
-        # Get field configuration
-        config = field_config[fieldName] if field_config[fieldName] else {};
-        
-        # Note: "type" gets compiled to "key" in JavaScript to avoid conflicts with React's type prop
-        fieldType = config.key if config.key else "text";
-        label = config.label if config.label else fieldName;
-        placeholder = config.placeholder if config.placeholder else "";
-        fieldClassName = config.className if config.className else "";
+    # Helper: Render error message
+    def renderError(error: any) -> JsxElement | None {
+        if not error {
+            return None;
+        }
+        return (
+            <p style={{color: "#ef4444", fontSize: "0.85rem", marginTop: "0.25rem"}}>
+                ⚠️ {error.message}
+            </p>
+        );
+    }
+
+    # Helper: Extract enum options from schema
+    def getEnumOptions(fieldSchema: any) -> list {
+        unwrapped = unwrapZodSchema(fieldSchema);
+        if unwrapped._def and unwrapped._def.entries {
+            return Object.keys(unwrapped._def.entries);
+        } elif unwrapped.def and unwrapped.def.entries {
+            return Object.keys(unwrapped.def.entries);
+        }
+        return [];
+    }
+
+    # Helper: Render the actual input element based on type
+    def renderInput(fieldType: str, field: any, error: any, config: dict, fieldSchema: any, fieldName: str) -> JsxElement {
         inputClassName = config.inputClassName if config.inputClassName else "";
         labelClassName = config.labelClassName if config.labelClassName else "";
+        placeholder = config.placeholder if config.placeholder else "";
+        label = config.label if config.label else fieldName;
         
-        # Register field with type-specific options
-        field = form.register(fieldName);
-        error = errors[fieldName];
-
-        # Checkbox fields - need special handling for boolean values
+        # Checkbox
         if fieldType == "checkbox" {
             watchValue = form.watch(fieldName);
             return (
-                <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
-                    <label style={{cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem"}}>
-                        <input
-                            type="checkbox"
-                            name={field.name}
-                            ref={field.ref}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            checked={watchValue || false}
-                            className={inputClassName}
-                            style={{cursor: "pointer"}}
-                        />
-                        <span className={labelClassName}>
-                            {label}
-                        </span>
-                    </label>
-                    {error &&
-                        <p
-                            style={{
-                                color: "#ef4444",
-                                fontSize: "0.85rem",
-                                marginTop: "0.25rem"
-                            }}
-                        >
-                            ⚠️ {error.message}
-                        </p>
-                    }
-                </div>
+                <label style={{cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem"}}>
+                    <input
+                        type="checkbox"
+                        name={field.name}
+                        ref={field.ref}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        checked={watchValue || False}
+                        className={inputClassName}
+                        style={{cursor: "pointer"}}
+                    />
+                    <span className={labelClassName}>{label}</span>
+                </label>
             );
         }
         
-        # Select fields (ZodEnum)
+        # Select dropdown
         if fieldType == "select" {
-            unwrappedSchema = unwrapZodSchema(fieldSchema);
-            # Extract enum values from entries object
-            options = [];
-            
-            if unwrappedSchema._def and unwrappedSchema._def.entries {
-                # entries is an object/dict, get its keys which are the enum values
-                options = Object.keys(unwrappedSchema._def.entries);
-            } elif unwrappedSchema.def and unwrappedSchema.def.entries {
-                options = Object.keys(unwrappedSchema.def.entries);
-            }
-            
+            options = getEnumOptions(fieldSchema);
             watchValue = form.watch(fieldName);
-            
             return (
-                <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
-                    <label className={labelClassName} style={{display: "block", marginBottom: "0.5rem"}}>
-                        {label}
-                    </label>
                     <select
                         name={field.name}
                         ref={field.ref}
@@ -531,108 +515,48 @@ impl JacForm(props: dict) -> JsxElement {
                         onBlur={field.onBlur}
                         value={watchValue || ""}
                         className={inputClassName}
-                        style={{
-                            width: "100%",
-                            boxSizing: "border-box"
-                        }}
+                        style={{width: "100%", boxSizing: "border-box"}}
                     >
-                        <option value="">
-                            {placeholder if placeholder else f"Select {label}"}
-                        </option>
-                        {options.map(
-                            lambda option:any -> JsxElement {
-                                return <option value={option} key={option}>
-                                    {option}
-                                </option>;
-                            }
-                        )}
+                        <option value="">{placeholder if placeholder else f"Select {label}"}</option>
+                        {options.map(lambda opt: any -> JsxElement {
+                            return <option value={opt} key={opt}>{opt}</option>;
+                        })}
                     </select>
-                    {error &&
-                        <p
-                            style={{
-                                color: "#ef4444",
-                                fontSize: "0.85rem",
-                                marginTop: "0.25rem"
-                            }}
-                        >
-                            ⚠️ {error.message}
-                        </p>
-                    }
-                </div>
             );
         }
         
-        # Radio button fields
+        # Radio buttons
         if fieldType == "radio" {
-            unwrappedSchema = unwrapZodSchema(fieldSchema);
-            # Extract options from config or enum schema
-            options = [];
-            
-            # Otherwise try to extract from enum schema
-            if unwrappedSchema._def and unwrappedSchema._def.entries {
-                options = Object.keys(unwrappedSchema._def.entries);
-            } elif unwrappedSchema.def and unwrappedSchema.def.entries {
-                options = Object.keys(unwrappedSchema.def.entries);
-            }
-            
+            options = getEnumOptions(fieldSchema);
             watchValue = form.watch(fieldName);
-            
             return (
-                <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
-                    <label className={labelClassName} style={{display: "block", marginBottom: "0.5rem", fontWeight: "500"}}>
-                        {label}
-                    </label>
                     <div style={{display: "flex", flexDirection: "column", gap: "0.5rem"}}>
-                        {options.map(
-                            lambda option:any -> JsxElement {
-                                return <label 
-                                    key={option} 
-                                    style={{
-                                        cursor: "pointer", 
-                                        display: "flex", 
-                                        alignItems: "center", 
-                                        gap: "0.5rem"
-                                    }}
-                                >
+                        {options.map(lambda opt: any -> JsxElement {
+                            return (
+                                <label key={opt} style={{cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem"}}>
                                     <input
-                                        type={fieldType}
+                                        type="radio"
                                         name={field.name}
-                                        value={option}
+                                        value={opt}
                                         ref={field.ref}
                                         onChange={field.onChange}
                                         onBlur={field.onBlur}
-                                        checked={watchValue == option}
+                                        checked={watchValue == opt}
                                         className={inputClassName}
                                         style={{cursor: "pointer"}}
                                     />
-                                    <span>{option}</span>
-                                </label>;
-                            }
-                        )}
+                                    <span>{opt}</span>
+                                </label>
+                            );
+                        })}
                     </div>
-                    {error &&
-                        <p
-                            style={{
-                                color: "#ef4444",
-                                fontSize: "0.85rem",
-                                marginTop: "0.25rem"
-                            }}
-                        >
-                            ⚠️ {error.message}
-                        </p>
-                    }
-                </div>
             );
         }
         
-        # Textarea fields
+        # Textarea
         if fieldType == "textarea" {
             rows = config.rows if config.rows else 4;
             return (
-                <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
-                    <label className={labelClassName} style={{display: "block", marginBottom: "0.5rem"}}>
-                        {label}
-                    </label>
                     <textarea
                         placeholder={placeholder}
                         rows={rows}
@@ -648,27 +572,61 @@ impl JacForm(props: dict) -> JsxElement {
                             resize: "vertical"
                         }}
                     />
-                    {error &&
-                        <p
+            );
+        }
+        
+        # Regular input (text, email, password, number, date, datetime-local, tel, url, etc.)
+        # Special handling for password fields with visibility toggle
+        if fieldType == "password" and config.showPasswordToggle {
+            isVisible = passwordVisible[fieldName] || False;
+            
+            return (
+                <div>
+                    <div style={{position: "relative"}}>
+                        <input
+                            type={"text" if isVisible else "password"}
+                            placeholder={placeholder}
+                            {...field}
+                            className={inputClassName}
                             style={{
-                                color: "#ef4444",
-                                fontSize: "0.85rem",
-                                marginTop: "0.25rem"
+                                width: "100%",
+                                boxSizing: "border-box",
+                                border: ("2px solid #ef4444" if error else "2px solid #e5e7eb"),
+                                paddingRight: "2.5rem"
                             }}
-                        >
-                            ⚠️ {error.message}
-                        </p>
-                    }
+                        />
+                    </div>
+                    <label 
+                        style={{
+                            cursor: "pointer", 
+                            display: "flex", 
+                            alignItems: "center", 
+                            gap: "0.5rem",
+                            marginTop: "0.5rem",
+                            fontSize: "0.875rem",
+                            color: "#6b7280"
+                        }}
+                    >
+                        <input
+                            type="checkbox"
+                            checked={isVisible}
+                            onChange={lambda e: any -> None { 
+                                setPasswordVisible(lambda prev: any -> dict {
+                                    newState = Object.assign({}, prev);
+                                    newState[fieldName] = not isVisible;
+                                    return newState;
+                                });
+                            }}
+                            style={{cursor: "pointer"}}
+                        />
+                        <span>Show password</span>
+                    </label>
                 </div>
             );
         }
         
-        # Regular input fields
+        # Regular input without toggle
         return (
-            <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
-                <label className={labelClassName} style={{display: "block", marginBottom: "0.5rem"}}>
-                    {label}
-                </label>
                 <input
                     type={fieldType}
                     placeholder={placeholder}
@@ -677,20 +635,35 @@ impl JacForm(props: dict) -> JsxElement {
                     style={{
                         width: "100%",
                         boxSizing: "border-box",
-                        border: ("2px solid #ef4444" if error else "2px solid #e5e7eb"),
+                        border: ("2px solid #ef4444" if error else "2px solid #e5e7eb")
                     }}
                 />
-                {error &&
-                    <p
-                        style={{
-                            color: "#ef4444",
-                            fontSize: "0.85rem",
-                            marginTop: "0.25rem"
-                        }}
-                    >
-                        ⚠️ {error.message}
-                    </p>
-                }
+        );
+    }
+
+    # Main field renderer
+    def renderField(fieldName: str) -> JsxElement {
+        fieldSchema = schemaShape[fieldName];
+        config = field_config[fieldName] if field_config[fieldName] else {};
+        
+        # Note: "type" gets compiled to "key" in JavaScript to avoid conflicts with React's type prop
+        fieldType = config.key if config.key else "text";
+        label = config.label if config.label else fieldName;
+        fieldClassName = config.className if config.className else "";
+        labelClassName = config.labelClassName if config.labelClassName else "";
+        
+        # Register field and get error state
+        field = form.register(fieldName);
+        error = errors[fieldName];
+        
+        # Render: wrapper > input > error
+        return (
+            <div className={fieldClassName} style={{marginBottom: "1rem"}} key={fieldName}>
+                <label className={labelClassName} style={{display: "block", marginBottom: "0.5rem"}}>
+                    {label}
+                </label>
+                {renderInput(fieldType, field, error, config, fieldSchema, fieldName)}
+                {renderError(error)}
             </div>
         );
     }
