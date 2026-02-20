@@ -633,7 +633,7 @@ test "server impl file reloads base jac file" {
     """Test that changing a .impl.jac file triggers reload of its base .jac file."""
     with TemporaryDirectory() as tmpdir {
         temp_project = Path(tmpdir);
-        
+
         # Create base server-side .jac file with abstract method
         base_file = temp_project / "calculator.jac";
         base_file.write_text(
@@ -650,7 +650,7 @@ test "server impl file reloads base jac file" {
             "    }\n"
             "}\n"
         );
-        
+
         # Create .impl.jac file - Version 1
         impl_file = temp_project / "calculator.impl.jac";
         impl_file.write_text(
@@ -658,35 +658,35 @@ test "server impl file reloads base jac file" {
             "    return a + b;  # Simple addition\n"
             "}\n"
         );
-        
+
         client = JacTestClient.from_file(str(base_file), base_path=str(temp_project));
         try {
             client.register_user("testuser", "password123");
-            
+
             # Call walker - should return 8 (5 + 3)
             response1 = client.post("/walker/calculate", json={});
             assert response1.ok;
             reports1 = response1.data.get("reports", []);
             assert len(reports1) > 0;
             assert reports1[0].get("result") == 8;
-            
+
             # Version 2: Update impl file to multiply
             impl_file.write_text(
                 "impl Calculator.add(a: int, b: int) -> int {\n"
                 "    return a * b;  # Now multiply instead\n"
                 "}\n"
             );
-            
+
             # Trigger reload
             client.reload();
-            
+
             # Call walker again - should now return 15 (5 * 3)
             response2 = client.post("/walker/calculate", json={});
             assert response2.ok;
             reports2 = response2.data.get("reports", []);
             assert len(reports2) > 0;
             assert reports2[0].get("result") == 15;
-            
+
             # Verify the value actually changed
             assert reports1[0].get("result") != reports2[0].get("result");
         } finally {
@@ -702,7 +702,7 @@ test "client impl file reloads base cl.jac file" {
         unique_dir.mkdir(parents=True, exist_ok=True);
         compiled_dir = unique_dir / ".jac" / "client" / "compiled";
         compiled_dir.mkdir(parents=True, exist_ok=True);
-        
+
         # Create base client-side .cl.jac file
         base_file = unique_dir / "Button.cl.jac";
         base_file.write_text(
@@ -717,7 +717,7 @@ test "client impl file reloads base cl.jac file" {
             "    }\n"
             "}\n"
         );
-        
+
         # Create .impl.jac file - Version 1
         impl_file = unique_dir / "Button.impl.jac";
         impl_file.write_text(
@@ -727,19 +727,19 @@ test "client impl file reloads base cl.jac file" {
             "    }\n"
             "}\n"
         );
-        
+
         watcher = JacFileWatcher(watch_paths=[str(unique_dir)], _debounce_ms=50);
         reloader = HotReloader(
             base_path=str(unique_dir), module_name="Button", watcher=watcher
         );
-        
+
         # Initial compilation
         reloader._recompile_client_code(str(base_file));
         output_file = unique_dir / ".jac" / "client" / "compiled" / "Button.js";
         assert output_file.exists() , "Initial JS file was not created";
         content1 = output_file.read_text();
         assert "Click Me" in content1;
-        
+
         # Version 2: Update impl file to change label
         impl_file.write_text(
             "cl {\n"
@@ -748,10 +748,10 @@ test "client impl file reloads base cl.jac file" {
             "    }\n"
             "}\n"
         );
-        
+
         # Simulate impl file change - should trigger base file recompilation
         reloader._process_change(str(impl_file));
-        
+
         # Check that JS was updated
         assert output_file.exists() , "JS file should exist after impl change";
         content2 = output_file.read_text();

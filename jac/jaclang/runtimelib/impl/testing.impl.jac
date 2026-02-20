@@ -286,14 +286,14 @@ impl JacTestClient.reload -> None {
     import from pathlib { Path }
     import os;
     self._ensure_initialized();
-    
+
     # Extract module name from file path (same as _ensure_initialized)
     (base, mod) = os.path.split(self._jac_file);
     base = base or "./";
     if self._jac_file.endswith(".jac") {
         mod = mod[:-4];
     }
-    
+
     # Create HotReloader instance lazily
     if self._hot_reloader is None {
         import from jaclang.runtimelib.hmr { HotReloader }
@@ -318,9 +318,9 @@ impl JacTestClient.reload -> None {
         self._server.introspector._module = new_module;
         self._server.introspector._functions = self._server.introspector._collect_functions();
         self._server.introspector._walkers = self._server.introspector._collect_walkers();
-       
+
     }
-    
+
     # Recreate handler class with new module definitions
     self._handler_class = self._server.create_handler();
 }
