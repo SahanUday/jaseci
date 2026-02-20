@@ -70,9 +70,7 @@ impl JacTestClient._ensure_initialized -> None {
     # Load the Jac module
     Jac.jac_import(target=mod, base_path=base, lng="jac");
     # Create server in test mode (port=0 means no real socket binding)
-    self._server = JacAPIServer(
-        module_name=mod, port=0, base_path=self._base_path
-    );
+    self._server = JacAPIServer(module_name=mod, port=0, base_path=self._base_path);
     # Load module metadata
     self._server.load_module();
     # Get handler class for request processing
@@ -286,29 +284,34 @@ impl JacTestClient.reload -> None {
     import from pathlib { Path }
     import os;
     self._ensure_initialized();
-
     # Extract module name from file path (same as _ensure_initialized)
     (base, mod) = os.path.split(self._jac_file);
     base = base or "./";
     if self._jac_file.endswith(".jac") {
         mod = mod[:-4];
     }
-
     # Create HotReloader instance lazily
     if self._hot_reloader is None {
         import from jaclang.runtimelib.hmr { HotReloader }
         # Create minimal mock watcher (HotReloader needs it but we don't use file watching)
         class MockWatcher {
             has additional_patterns: list[str] = [];
-            def add_callback(cb: Any) -> None { ; }
-            def start -> None { ;  }
-            def stop -> None { ; }
+
+            def add_callback(cb: Any) -> None {
+                ;
+            }
+
+            def start -> None {
+                ;
+            }
+
+            def stop -> None {
+                ;
+            }
         }
         mock_watcher = MockWatcher();
         self._hot_reloader = HotReloader(
-            base_path=base,
-            module_name=mod,
-            watcher=mock_watcher
+            base_path=base, module_name=mod, watcher=mock_watcher
         );
     }
     self._hot_reloader._process_change(self._jac_file);
@@ -318,9 +321,7 @@ impl JacTestClient.reload -> None {
         self._server.introspector._module = new_module;
         self._server.introspector._functions = self._server.introspector._collect_functions();
         self._server.introspector._walkers = self._server.introspector._collect_walkers();
-
     }
-
     # Recreate handler class with new module definitions
     self._handler_class = self._server.create_handler();
 }

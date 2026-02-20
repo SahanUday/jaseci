@@ -65,7 +65,9 @@ impl HotReloader._process_change(file_path: str) -> None {
     target_path = file_path;
     if file_path.endswith('.impl.jac') {
         base = discover_base_file(file_path);
-        if base { target_path = base; }
+        if base {
+            target_path = base;
+        }
     }
     # Check if file has client and/or server declarations
     (has_client, has_server) = self._classify_declarations(target_path);

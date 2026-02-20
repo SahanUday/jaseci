@@ -633,7 +633,6 @@ test "server impl file reloads base jac file" {
     """Test that changing a .impl.jac file triggers reload of its base .jac file."""
     with TemporaryDirectory() as tmpdir {
         temp_project = Path(tmpdir);
-
         # Create base server-side .jac file with abstract method
         base_file = temp_project / "calculator.jac";
         base_file.write_text(
@@ -650,7 +649,6 @@ test "server impl file reloads base jac file" {
             "    }\n"
             "}\n"
         );
-
         # Create .impl.jac file - Version 1
         impl_file = temp_project / "calculator.impl.jac";
         impl_file.write_text(
@@ -658,7 +656,6 @@ test "server impl file reloads base jac file" {
             "    return a + b;  # Simple addition\n"
             "}\n"
         );
-
         client = JacTestClient.from_file(str(base_file), base_path=str(temp_project));
         try {
             client.register_user("testuser", "password123");
@@ -702,7 +699,6 @@ test "client impl file reloads base cl.jac file" {
         unique_dir.mkdir(parents=True, exist_ok=True);
         compiled_dir = unique_dir / ".jac" / "client" / "compiled";
         compiled_dir.mkdir(parents=True, exist_ok=True);
-
         # Create base client-side .cl.jac file
         base_file = unique_dir / "Button.cl.jac";
         base_file.write_text(
@@ -717,7 +713,6 @@ test "client impl file reloads base cl.jac file" {
             "    }\n"
             "}\n"
         );
-
         # Create .impl.jac file - Version 1
         impl_file = unique_dir / "Button.impl.jac";
         impl_file.write_text(
@@ -727,19 +722,16 @@ test "client impl file reloads base cl.jac file" {
             "    }\n"
             "}\n"
         );
-
         watcher = JacFileWatcher(watch_paths=[str(unique_dir)], _debounce_ms=50);
         reloader = HotReloader(
             base_path=str(unique_dir), module_name="Button", watcher=watcher
         );
-
         # Initial compilation
         reloader._recompile_client_code(str(base_file));
         output_file = unique_dir / ".jac" / "client" / "compiled" / "Button.js";
         assert output_file.exists() , "Initial JS file was not created";
         content1 = output_file.read_text();
         assert "Click Me" in content1;
-
         # Version 2: Update impl file to change label
         impl_file.write_text(
             "cl {\n"
@@ -748,10 +740,8 @@ test "client impl file reloads base cl.jac file" {
             "    }\n"
             "}\n"
         );
-
         # Simulate impl file change - should trigger base file recompilation
         reloader._process_change(str(impl_file));
-
         # Check that JS was updated
         assert output_file.exists() , "JS file should exist after impl change";
         content2 = output_file.read_text();
