@@ -3,6 +3,7 @@
 This document provides a summary of new features, improvements, and bug fixes in each version of **Jaclang**. For details on changes that might require updates to your existing code, please refer to the [Breaking Changes](../breaking-changes.md) page.
 
 ## jaclang 0.10.6 (Unreleased)
+- **HMR Server-Side Reloading Refactor**: Improved HMR functionality with better handling of `.impl.jac` files and optimized caching to avoid unnecessary recompilations during development
 
 ## jaclang 0.10.5 (Latest Release)
 
@@ -78,8 +79,6 @@ This document provides a summary of new features, improvements, and bug fixes in
 - **Bootstrap Compiler (`jac0`)**: Added a single-file Python transpiler (`jac0.py`, ~1900 lines) that compiles the Jac subset produced by `py2jac` into equivalent Python source code. This closes the bootstrap loop.
 - **RD Parser: Broad Grammar Parity Fixes**: Fixed 16 grammar gaps in the recursive descent parser, raising walk-check match rate from 95.3% to 98.7%.
 - **`jac --version` Shows Installed Plugins**: The version banner now lists all installed Jac plugins with their versions, making it easy to see the full environment at a glance.
-- **Fix: Type Checker Crashes**: Fixed crashes when type-checking default/star imports (`import from mod { default as X }`) and walker entry/exit handlers.
-- **HMR Server-Side Reloading Refactor**: Improved HMR functionality with better handling of `.impl.jac` files and optimized caching to avoid unnecessary recompilations during development
 - **Support Go to Definition for Inherited Members**: "Go to Definition" now works correctly for inherited methods and attributes on classes without an explicit parent class.
 - **Type Checker Improvements**:
   - **Callable Type Annotation Support**: Added full support for `Callable[[ParamTypes], ReturnType]` type annotations. Includes gradual callable form (`Callable[..., T]`), parameter contravariance, return type covariance, automatic self/cls filtering for methods and classmethods, and validation that extra source parameters have defaults.
