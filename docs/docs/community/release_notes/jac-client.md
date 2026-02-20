@@ -4,6 +4,8 @@ This document provides a summary of new features, improvements, and bug fixes in
 
 ## jac-client 0.2.20 (Unreleased)
 
+- **HMR Server-Side Reloading Refactor**: Improved HMR functionality with better handling of `.impl.jac` files and optimized caching to avoid unnecessary recompilations during development
+
 ## jac-client 0.2.19 (Latest Release)
 
 - **Debug Mode Enabled by Default**: Debug mode is now `true` by default for a better development experience. Raw error output is displayed automatically without needing to configure `debug = true` in `jac.toml`. To disable, set `debug = false` in the `[plugins.client]` section. A warning is shown when running `jac start` in production mode (without `--dev`) with debug enabled, recommending to disable it for production deployments.
@@ -11,7 +13,6 @@ This document provides a summary of new features, improvements, and bug fixes in
 - **Update client documetnation and enhance all in one example sith advance routings**
 - **Target System Refactoring**: Refactored the client target system for improved scalability and maintainability. Introduced `TargetFactory` singleton with lazy loading for non-web targets (Desktop, PWA), reducing startup overhead when only the default web target is used. Resolved circular import issues by deferring imports to function scope. Extracted magic numbers to named constants (`VITE_DEV_SERVER_PORT`, `DEFAULT_FUNCTION_NAME`) and decomposed `_generate_index_html` into focused helper functions. Added robust process termination with graceful shutdown fallback and safe attribute access chains for module introspection.
 - Internal: updated all-in-one jac.toml to enable metrics endpoint
-- **HMR Server-Side Reloading Refactor**: Improved HMR functionality with better handling of `.impl.jac` files and optimized caching to avoid unnecessary recompilations during development
 
 ## jac-client 0.2.18
 
