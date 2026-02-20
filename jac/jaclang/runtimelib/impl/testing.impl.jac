@@ -297,17 +297,9 @@ impl JacTestClient.reload -> None {
         class MockWatcher {
             has additional_patterns: list[str] = [];
 
-            def add_callback(cb: Any) -> None {
-                ;
-            }
-
-            def start -> None {
-                ;
-            }
-
-            def stop -> None {
-                ;
-            }
+            def add_callback(cb: Any) -> None { }
+            def start -> None { }
+            def stop -> None { }
         }
         mock_watcher = MockWatcher();
         self._hot_reloader = HotReloader(
