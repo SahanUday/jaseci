@@ -5,6 +5,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 ## jaclang 0.10.6 (Unreleased)
 
 - **HMR Server-Side Reloading Refactor**: Improved HMR functionality with better handling of `.impl.jac` files and optimized caching to avoid unnecessary recompilations during development
+- **Fix:**: update the jac-check command to print the file names of the files that failed to have clean error message.
 
 ## jaclang 0.10.5 (Latest Release)
 
