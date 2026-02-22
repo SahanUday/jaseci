@@ -67,6 +67,8 @@ glob JAC_RUNTIME_JS_OBJECT: str = r"""{
       return {re: (a.re * b.re + a.im * b.im) / d, im: (a.im * b.re - a.re * b.im) / d};
     },
     pow(a, b) {
+      if (typeof b === "number") b = {re: b, im: 0};
+      if (typeof a === "number") a = {re: a, im: 0};
       if (b.im === 0 && Number.isInteger(b.re)) {
         let result = {re: 1, im: 0};
         for (let i = 0; i < Math.abs(b.re); i++) result = _jac.complex.mul(result, a);
@@ -79,7 +81,11 @@ glob JAC_RUNTIME_JS_OBJECT: str = r"""{
       const newTheta = lnr * b.im + theta * b.re;
       return {re: newR * Math.cos(newTheta), im: newR * Math.sin(newTheta)};
     },
-    eq(a, b) { return a.re === b.re && a.im === b.im; },
+    eq(a, b) {
+      if (typeof b === "number") b = {re: b, im: 0};
+      if (typeof a === "number") a = {re: a, im: 0};
+      return a.re === b.re && a.im === b.im;
+    },
     neg(a) { return {re: -a.re, im: -a.im}; },
     pos(a) { return {re: +a.re, im: +a.im}; }
   },
@@ -172,7 +178,9 @@ glob JAC_RUNTIME_JS_OBJECT: str = r"""{
         return [...parts.slice(0, maxsplit), parts.slice(maxsplit).join(" ")].filter(x => x !== undefined);
       }
       if (maxsplit === undefined) return s.split(sep);
-      return s.split(sep, maxsplit + 1);
+      const parts = s.split(sep);
+      if (parts.length <= maxsplit + 1) return parts;
+      return [...parts.slice(0, maxsplit), parts.slice(maxsplit).join(sep)];
     },
     rsplit(s, sep, maxsplit) {
       if (maxsplit === undefined) return _jac.str.split(s, sep);
@@ -227,7 +235,13 @@ glob JAC_RUNTIME_JS_OBJECT: str = r"""{
     },
     expandtabs(s, tabsize) {
       const ts = tabsize === undefined ? 8 : tabsize;
-      return s.replace(/\t/g, () => " ".repeat(ts));
+      let result = "", col = 0;
+      for (const c of s) {
+        if (c === "\t") { const sp = ts - (col % ts); result += " ".repeat(sp); col += sp; }
+        else if (c === "\n" || c === "\r") { result += c; col = 0; }
+        else { result += c; col++; }
+      }
+      return result;
     },
     isnumeric(s) {
       if (s.length === 0) return false;
@@ -356,7 +370,20 @@ glob JAC_RUNTIME_JS_OBJECT: str = r"""{
       for (const k of keys) d[k] = v;
       return d;
     },
-    eq(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+    eq(a, b) {
+      const ka = Object.keys(a), kb = Object.keys(b);
+      if (ka.length !== kb.length) return false;
+      for (const k of ka) {
+        if (!(k in b)) return false;
+        const va = a[k], vb = b[k];
+        if (va !== vb) {
+          if (typeof va === "object" && typeof vb === "object" && va !== null && vb !== null) {
+            if (JSON.stringify(va) !== JSON.stringify(vb)) return false;
+          } else return false;
+        }
+      }
+      return true;
+    }
   },
 
   set: {
@@ -381,6 +408,38 @@ glob JAC_RUNTIME_JS_OBJECT: str = r"""{
     symmetric_difference_update(s, other) {
       for (const v of other) { if (s.has(v)) s.delete(v); else s.add(v); }
     },
+    union(a, b) {
+      const r = new Set(a);
+      for (const v of b) r.add(v);
+      return r;
+    },
+    intersection(a, b) {
+      const bs = b instanceof Set ? b : new Set(b);
+      const r = new Set();
+      for (const v of a) { if (bs.has(v)) r.add(v); }
+      return r;
+    },
+    difference(a, b) {
+      const bs = b instanceof Set ? b : new Set(b);
+      const r = new Set();
+      for (const v of a) { if (!bs.has(v)) r.add(v); }
+      return r;
+    },
+    symmetricDifference(a, b) {
+      const r = new Set(a);
+      for (const v of b) { if (r.has(v)) r.delete(v); else r.add(v); }
+      return r;
+    },
+    isSubsetOf(a, b) {
+      if (a.size > b.size) return false;
+      for (const v of a) { if (!b.has(v)) return false; }
+      return true;
+    },
+    isSupersetOf(a, b) { return _jac.set.isSubsetOf(b, a); },
+    isDisjointFrom(a, b) {
+      for (const v of a) { if (b.has(v)) return false; }
+      return true;
+    },
     is_proper_subset(a, b) {
       if (a.size >= b.size) return false;
       for (const v of a) { if (!b.has(v)) return false; }
@@ -392,6 +451,363 @@ glob JAC_RUNTIME_JS_OBJECT: str = r"""{
       for (const v of a) { if (!b.has(v)) return false; }
       return true;
     }
+  },
+
+  bytes: {
+    hex(b) {
+      return Array.from(b).map(x => x.toString(16).padStart(2, "0")).join("");
+    },
+    fromhex(s) {
+      const arr = [];
+      const clean = s.replace(/\s/g, "");
+      for (let i = 0; i < clean.length; i += 2) arr.push(parseInt(clean.substr(i, 2), 16));
+      return new Uint8Array(arr);
+    },
+    _indexOf(b, sub, start, end) {
+      const s = start || 0;
+      const e = end === undefined ? b.length : end;
+      const sl = sub.length;
+      if (sl === 0) return s;
+      for (let i = s; i <= e - sl; i++) {
+        let m = true;
+        for (let j = 0; j < sl; j++) { if (b[i + j] !== sub[j]) { m = false; break; } }
+        if (m) return i;
+      }
+      return -1;
+    },
+    _lastIndexOf(b, sub, start, end) {
+      const s = start || 0;
+      const e = end === undefined ? b.length : end;
+      const sl = sub.length;
+      if (sl === 0) return e;
+      for (let i = e - sl; i >= s; i--) {
+        let m = true;
+        for (let j = 0; j < sl; j++) { if (b[i + j] !== sub[j]) { m = false; break; } }
+        if (m) return i;
+      }
+      return -1;
+    },
+    count(b, sub) {
+      let c = 0, p = 0;
+      while (p <= b.length - sub.length) {
+        const idx = _jac.bytes._indexOf(b, sub, p);
+        if (idx === -1) break;
+        c++; p = idx + sub.length;
+      }
+      return c;
+    },
+    find(b, sub, start, end) { return _jac.bytes._indexOf(b, sub, start, end); },
+    rfind(b, sub, start, end) { return _jac.bytes._lastIndexOf(b, sub, start, end); },
+    index(b, sub, start, end) {
+      const idx = _jac.bytes._indexOf(b, sub, start, end);
+      if (idx === -1) throw new Error("substring not found");
+      return idx;
+    },
+    rindex(b, sub, start, end) {
+      const idx = _jac.bytes._lastIndexOf(b, sub, start, end);
+      if (idx === -1) throw new Error("substring not found");
+      return idx;
+    },
+    startswith(b, prefix, start, end) {
+      const s = start || 0;
+      if (prefix.length > b.length - s) return false;
+      for (let i = 0; i < prefix.length; i++) { if (b[s + i] !== prefix[i]) return false; }
+      return true;
+    },
+    endswith(b, suffix, start, end) {
+      const e = end === undefined ? b.length : end;
+      if (suffix.length > e) return false;
+      const off = e - suffix.length;
+      for (let i = 0; i < suffix.length; i++) { if (b[off + i] !== suffix[i]) return false; }
+      return true;
+    },
+    replace(b, old_, new_, count) {
+      const r = [];
+      let pos = 0, n = 0;
+      const max = count === undefined ? Infinity : count;
+      while (pos <= b.length) {
+        if (n < max) {
+          const idx = _jac.bytes._indexOf(b, old_, pos);
+          if (idx !== -1) {
+            for (let i = pos; i < idx; i++) r.push(b[i]);
+            for (let i = 0; i < new_.length; i++) r.push(new_[i]);
+            pos = idx + old_.length; n++;
+            continue;
+          }
+        }
+        for (let i = pos; i < b.length; i++) r.push(b[i]);
+        break;
+      }
+      return new Uint8Array(r);
+    },
+    _isWS(c) { return c === 32 || c === 9 || c === 10 || c === 13 || c === 11 || c === 12; },
+    strip(b, chars) {
+      let s = 0, e = b.length;
+      if (chars) { const cs = new Set(chars); while (s < e && cs.has(b[s])) s++; while (e > s && cs.has(b[e-1])) e--; }
+      else { while (s < e && _jac.bytes._isWS(b[s])) s++; while (e > s && _jac.bytes._isWS(b[e-1])) e--; }
+      return b.slice(s, e);
+    },
+    lstrip(b, chars) {
+      let s = 0;
+      if (chars) { const cs = new Set(chars); while (s < b.length && cs.has(b[s])) s++; }
+      else { while (s < b.length && _jac.bytes._isWS(b[s])) s++; }
+      return b.slice(s);
+    },
+    rstrip(b, chars) {
+      let e = b.length;
+      if (chars) { const cs = new Set(chars); while (e > 0 && cs.has(b[e-1])) e--; }
+      else { while (e > 0 && _jac.bytes._isWS(b[e-1])) e--; }
+      return b.slice(0, e);
+    },
+    removeprefix(b, prefix) {
+      if (_jac.bytes.startswith(b, prefix)) return b.slice(prefix.length);
+      return b.slice();
+    },
+    removesuffix(b, suffix) {
+      if (suffix.length > 0 && _jac.bytes.endswith(b, suffix)) return b.slice(0, b.length - suffix.length);
+      return b.slice();
+    },
+    split(b, sep, maxsplit) {
+      const parts = [];
+      let pos = 0, n = 0;
+      const max = maxsplit === undefined ? Infinity : maxsplit;
+      while (pos <= b.length) {
+        if (n >= max) { parts.push(b.slice(pos)); return parts; }
+        const idx = _jac.bytes._indexOf(b, sep, pos);
+        if (idx === -1) { parts.push(b.slice(pos)); return parts; }
+        parts.push(b.slice(pos, idx));
+        pos = idx + sep.length; n++;
+      }
+      if (pos <= b.length) parts.push(b.slice(pos));
+      return parts;
+    },
+    rsplit(b, sep, maxsplit) {
+      if (maxsplit === undefined) return _jac.bytes.split(b, sep);
+      const parts = [];
+      let end = b.length, n = 0;
+      while (end >= 0 && n < maxsplit) {
+        const idx = _jac.bytes._lastIndexOf(b, sep, 0, end);
+        if (idx === -1) break;
+        parts.unshift(b.slice(idx + sep.length, end));
+        end = idx; n++;
+      }
+      parts.unshift(b.slice(0, end));
+      return parts;
+    },
+    splitlines(b, keepends) {
+      const result = [];
+      let start = 0;
+      for (let i = 0; i < b.length; i++) {
+        if (b[i] === 10 || b[i] === 13) {
+          let eol = i + 1;
+          if (b[i] === 13 && i + 1 < b.length && b[i + 1] === 10) eol++;
+          result.push(keepends ? b.slice(start, eol) : b.slice(start, i));
+          start = eol;
+          if (eol > i + 1) i++;
+        }
+      }
+      if (start < b.length) result.push(b.slice(start));
+      return result;
+    },
+    join(sep, parts) {
+      if (parts.length === 0) return new Uint8Array(0);
+      const r = [];
+      for (let i = 0; i < parts.length; i++) {
+        if (i > 0) for (const x of sep) r.push(x);
+        for (const x of parts[i]) r.push(x);
+      }
+      return new Uint8Array(r);
+    },
+    partition(b, sep) {
+      const idx = _jac.bytes._indexOf(b, sep);
+      if (idx === -1) return [b.slice(), new Uint8Array(0), new Uint8Array(0)];
+      return [b.slice(0, idx), sep.slice(), b.slice(idx + sep.length)];
+    },
+    rpartition(b, sep) {
+      const idx = _jac.bytes._lastIndexOf(b, sep);
+      if (idx === -1) return [new Uint8Array(0), new Uint8Array(0), b.slice()];
+      return [b.slice(0, idx), sep.slice(), b.slice(idx + sep.length)];
+    },
+    _isUp(c) { return c >= 65 && c <= 90; },
+    _isLo(c) { return c >= 97 && c <= 122; },
+    _isAl(c) { return (c >= 65 && c <= 90) || (c >= 97 && c <= 122); },
+    _isDig(c) { return c >= 48 && c <= 57; },
+    capitalize(b) {
+      if (b.length === 0) return new Uint8Array(0);
+      const r = new Uint8Array(b.length);
+      r[0] = _jac.bytes._isLo(b[0]) ? b[0] - 32 : b[0];
+      for (let i = 1; i < b.length; i++) r[i] = _jac.bytes._isUp(b[i]) ? b[i] + 32 : b[i];
+      return r;
+    },
+    lower(b) {
+      const r = new Uint8Array(b.length);
+      for (let i = 0; i < b.length; i++) r[i] = _jac.bytes._isUp(b[i]) ? b[i] + 32 : b[i];
+      return r;
+    },
+    upper(b) {
+      const r = new Uint8Array(b.length);
+      for (let i = 0; i < b.length; i++) r[i] = _jac.bytes._isLo(b[i]) ? b[i] - 32 : b[i];
+      return r;
+    },
+    title(b) {
+      const r = new Uint8Array(b.length);
+      let prev = false;
+      for (let i = 0; i < b.length; i++) {
+        if (_jac.bytes._isAl(b[i])) {
+          r[i] = prev ? (_jac.bytes._isUp(b[i]) ? b[i] + 32 : b[i]) : (_jac.bytes._isLo(b[i]) ? b[i] - 32 : b[i]);
+          prev = true;
+        } else { r[i] = b[i]; prev = false; }
+      }
+      return r;
+    },
+    swapcase(b) {
+      const r = new Uint8Array(b.length);
+      for (let i = 0; i < b.length; i++) {
+        if (_jac.bytes._isUp(b[i])) r[i] = b[i] + 32;
+        else if (_jac.bytes._isLo(b[i])) r[i] = b[i] - 32;
+        else r[i] = b[i];
+      }
+      return r;
+    },
+    center(b, width, fb) {
+      const f = fb || 32;
+      if (b.length >= width) return b.slice();
+      const total = width - b.length;
+      const left = Math.floor(total / 2);
+      const r = new Uint8Array(width);
+      r.fill(f, 0, left); r.set(b, left); r.fill(f, left + b.length);
+      return r;
+    },
+    ljust(b, width, fb) {
+      const f = fb || 32;
+      if (b.length >= width) return b.slice();
+      const r = new Uint8Array(width);
+      r.set(b); r.fill(f, b.length);
+      return r;
+    },
+    rjust(b, width, fb) {
+      const f = fb || 32;
+      if (b.length >= width) return b.slice();
+      const r = new Uint8Array(width);
+      const off = width - b.length;
+      r.fill(f, 0, off); r.set(b, off);
+      return r;
+    },
+    zfill(b, width) {
+      if (b.length >= width) return b.slice();
+      const r = new Uint8Array(width);
+      let off = 0;
+      if (b.length > 0 && (b[0] === 43 || b[0] === 45)) { r[0] = b[0]; off = 1; }
+      const pad = width - b.length;
+      r.fill(48, off, off + pad);
+      for (let i = off; i < b.length; i++) r[pad + i] = b[i];
+      return r;
+    },
+    expandtabs(b, tabsize) {
+      const ts = tabsize === undefined ? 8 : tabsize;
+      const r = [];
+      let col = 0;
+      for (let i = 0; i < b.length; i++) {
+        if (b[i] === 9) { const sp = ts - (col % ts); for (let j = 0; j < sp; j++) r.push(32); col += sp; }
+        else if (b[i] === 10 || b[i] === 13) { r.push(b[i]); col = 0; }
+        else { r.push(b[i]); col++; }
+      }
+      return new Uint8Array(r);
+    },
+    translate(b, table, del_) {
+      const r = [];
+      const ds = del_ ? new Set(del_) : null;
+      for (let i = 0; i < b.length; i++) {
+        if (ds && ds.has(b[i])) continue;
+        r.push(table && table[b[i]] !== undefined ? table[b[i]] : b[i]);
+      }
+      return new Uint8Array(r);
+    },
+    maketrans(from_, to_) {
+      const t = new Uint8Array(256);
+      for (let i = 0; i < 256; i++) t[i] = i;
+      for (let i = 0; i < from_.length; i++) t[from_[i]] = to_[i];
+      return t;
+    },
+    isalnum(b) {
+      if (b.length === 0) return false;
+      for (let i = 0; i < b.length; i++) if (!_jac.bytes._isAl(b[i]) && !_jac.bytes._isDig(b[i])) return false;
+      return true;
+    },
+    isalpha(b) {
+      if (b.length === 0) return false;
+      for (let i = 0; i < b.length; i++) if (!_jac.bytes._isAl(b[i])) return false;
+      return true;
+    },
+    isascii(b) {
+      for (let i = 0; i < b.length; i++) if (b[i] > 127) return false;
+      return true;
+    },
+    isdigit(b) {
+      if (b.length === 0) return false;
+      for (let i = 0; i < b.length; i++) if (!_jac.bytes._isDig(b[i])) return false;
+      return true;
+    },
+    islower(b) {
+      let has = false;
+      for (let i = 0; i < b.length; i++) {
+        if (_jac.bytes._isUp(b[i])) return false;
+        if (_jac.bytes._isLo(b[i])) has = true;
+      }
+      return has;
+    },
+    isupper(b) {
+      let has = false;
+      for (let i = 0; i < b.length; i++) {
+        if (_jac.bytes._isLo(b[i])) return false;
+        if (_jac.bytes._isUp(b[i])) has = true;
+      }
+      return has;
+    },
+    isspace(b) {
+      if (b.length === 0) return false;
+      for (let i = 0; i < b.length; i++) if (!_jac.bytes._isWS(b[i])) return false;
+      return true;
+    },
+    istitle(b) {
+      let prev = false, has = false;
+      for (let i = 0; i < b.length; i++) {
+        if (_jac.bytes._isUp(b[i])) { if (prev) return false; prev = true; has = true; }
+        else if (_jac.bytes._isLo(b[i])) { if (!prev) return false; prev = true; has = true; }
+        else prev = false;
+      }
+      return has;
+    },
+    add(a, b) {
+      const r = new Uint8Array(a.length + b.length);
+      r.set(a); r.set(b, a.length);
+      return r;
+    },
+    mul(b, n) {
+      const r = new Uint8Array(b.length * n);
+      for (let i = 0; i < n; i++) r.set(b, i * b.length);
+      return r;
+    },
+    mod(b, args) {
+      const s = new TextDecoder().decode(b);
+      return new TextEncoder().encode(_jac.str.mod(s, args));
+    },
+    eq(a, b) {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+      return true;
+    },
+    lt(a, b) {
+      for (let i = 0; i < Math.min(a.length, b.length); i++) {
+        if (a[i] < b[i]) return true;
+        if (a[i] > b[i]) return false;
+      }
+      return a.length < b.length;
+    },
+    gt(a, b) { return _jac.bytes.lt(b, a); },
+    le(a, b) { return _jac.bytes.eq(a, b) || _jac.bytes.lt(a, b); },
+    ge(a, b) { return _jac.bytes.eq(a, b) || _jac.bytes.gt(a, b); },
+    contains(b, sub) { return _jac.bytes._indexOf(b, sub) !== -1; }
   },
 
   tuple: {
@@ -534,9 +950,84 @@ glob JAC_RUNTIME_JS_OBJECT: str = r"""{
       return String(value);
     },
     ascii(obj) {
-      const s = JSON.stringify(String(obj));
-      return s.replace(/[^\x00-\x7F]/g, c => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+      if (typeof obj === "string") {
+        let r = "'";
+        for (const c of obj) {
+          const code = c.charCodeAt(0);
+          if (c === "\\") r += "\\\\";
+          else if (c === "'") r += "\\'";
+          else if (code >= 0x20 && code <= 0x7e) r += c;
+          else if (code < 0x100) r += "\\x" + code.toString(16).padStart(2, "0");
+          else r += "\\u" + code.toString(16).padStart(4, "0");
+        }
+        return r + "'";
+      }
+      return String(obj);
     },
-    complex(re, im) { return {re: re || 0, im: im || 0}; }
+    complex(re, im) { return {re: re || 0, im: im || 0}; },
+    bool(x) {
+      if (x === null || x === undefined || x === false || x === 0 || x === "" || Number.isNaN(x)) return false;
+      if (Array.isArray(x)) return x.length > 0;
+      if (x instanceof Set || x instanceof Map) return x.size > 0;
+      if (typeof x === "object") return Object.keys(x).length > 0;
+      return true;
+    },
+    range(...args) {
+      let start, stop, step;
+      if (args.length === 1) { start = 0; stop = args[0]; step = 1; }
+      else if (args.length === 2) { start = args[0]; stop = args[1]; step = 1; }
+      else { start = args[0]; stop = args[1]; step = args[2]; }
+      if (step === 0) throw new Error("range() arg 3 must not be zero");
+      const result = [];
+      if (step > 0) { for (let i = start; i < stop; i += step) result.push(i); }
+      else { for (let i = start; i > stop; i += step) result.push(i); }
+      return result;
+    },
+    slice(...args) {
+      if (args.length === 1) return { start: null, stop: args[0], step: null };
+      return { start: args[0] !== undefined ? args[0] : null, stop: args[1] !== undefined ? args[1] : null, step: args[2] !== undefined ? args[2] : null };
+    },
+    format(value, format_spec) {
+      if (!format_spec || format_spec === "") return String(value);
+      const m = format_spec.match(/^([<>^]?)(\d+)?(?:\.(\d+))?([dfseboxXn%]?)$/);
+      if (!m) return String(value);
+      const [, align, widthStr, precStr, ftype] = m;
+      let s;
+      const prec = precStr !== undefined ? parseInt(precStr) : undefined;
+      if (ftype === "f" || ftype === "") {
+        s = prec !== undefined ? Number(value).toFixed(prec) : String(value);
+      } else if (ftype === "d") {
+        s = String(Math.floor(Number(value)));
+      } else if (ftype === "b") {
+        s = Number(value).toString(2);
+      } else if (ftype === "o") {
+        s = Number(value).toString(8);
+      } else if (ftype === "x") {
+        s = Number(value).toString(16);
+      } else if (ftype === "X") {
+        s = Number(value).toString(16).toUpperCase();
+      } else if (ftype === "e") {
+        s = prec !== undefined ? Number(value).toExponential(prec) : Number(value).toExponential();
+      } else if (ftype === "%") {
+        s = (prec !== undefined ? (Number(value) * 100).toFixed(prec) : (Number(value) * 100).toFixed(6)) + "%";
+      } else if (ftype === "s" || ftype === "n") {
+        s = String(value);
+      } else {
+        s = String(value);
+      }
+      if (widthStr) {
+        const width = parseInt(widthStr);
+        if (s.length < width) {
+          const pad = " ".repeat(width - s.length);
+          if (align === "<") s = s + pad;
+          else if (align === "^") {
+            const left = Math.floor((width - s.length) / 2);
+            s = " ".repeat(left) + s + " ".repeat(width - s.length - left);
+          }
+          else s = pad + s;
+        }
+      }
+      return s;
+    }
   }
 }""";
