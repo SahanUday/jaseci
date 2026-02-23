@@ -108,6 +108,10 @@ impl HotReloader._reload_server_module(file_path: str) -> None {
             target=self.module_name, base_path=self.base_path, reload_module=True
         );
         console.print(f"[HMR] Reloaded: {file_path}");
+        # If there were previous errors, update the entry point to clear error overlays
+        if self._overlay_entry {
+            self._update_entry_point();
+        }
     } except SyntaxError as e {
         # Syntax error during reload
         line_info = f" (line {e.lineno})" if e?.lineno and e.lineno else "";
