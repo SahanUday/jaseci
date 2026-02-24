@@ -48,17 +48,15 @@ impl navigate(path: str) -> None {
 
 impl __createJacSchema(zodLib: any) -> any {
     handler = {
-        "apply": lambda target: any, thisArg: any, argumentsList: any -> any {
-            # When called as jacSchema({...}), call z.object({...})
-            return zodLib.object.apply(zodLib, argumentsList);
-        },
-        "get": lambda target: any, prop: any, receiver: any -> any {
-            # When accessing properties like jacSchema.string(), forward to z
-            return zodLib[prop];
-        }
+        "apply": lambda target: any , thisArg: any , argumentsList: any  -> any {
+        # When called as jacSchema({...}), call z.object({...})
+        return zodLib.object.apply(zodLib, argumentsList); },
+        "get": lambda target: any , prop: any , receiver: any  -> any {
+        # When accessing properties like jacSchema.string(), forward to z
+        return zodLib[prop]; }
     };
     # Create a dummy function as the proxy target
-    dummyFunc = lambda schema: any -> any { return zodLib.object(schema); };
+    dummyFunc = lambda schema: any  -> any { return zodLib.object(schema); };
     return Reflect.construct(Proxy, [dummyFunc, handler]);
 }
 
