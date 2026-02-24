@@ -3,13 +3,13 @@
 This document provides a summary of new features, improvements, and bug fixes in each version of **Jac-Client**. For details on changes that might require updates to your existing code, please refer to the [Breaking Changes](../breaking-changes.md) page.
 
 ## jac-client 0.3.1 (Unreleased)
+- **Form Handling:** Introduced `jacForm` hook for comprehensive form state management, `jacSchema` for type-safe form validation with custom rules and cross-field logic.
 
 ## jac-client 0.3.0 (Latest Release)
 
 - **Idiomatic Comprehensions in Examples**: Replaced all `.map(lambda ...)` / `.filter(lambda ...)` calls with list comprehensions across all example apps (basic-full-stack, full-stack-with-auth, all-in-one, early-exit).
 - **Automatic Endpoint Caching**: The client runtime now automatically caches responses from reader endpoints (walkers and server functions) and invalidates caches when writer endpoints are called, using compiler-provided `endpoint_effects` metadata. Includes an LRU cache (500 entries, 60s TTL), request deduplication for concurrent identical calls, and automatic cache clearing on auth state changes. No manual `jacInvalidate()` or cache annotations needed.
 - **HMR Server-Side Reloading Refactor**: Improved HMR functionality with better handling of `.impl.jac` files and optimized caching to avoid unnecessary recompilations during development
-- **Form Handling:** Introduced `useJacForm` hook for comprehensive form state management and validation, `jacSchema` for type-safe form validation with custom rules and cross-field logic.
 - 3 minor refactor/change.
 
 ## jac-client 0.2.19

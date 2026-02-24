@@ -6,7 +6,7 @@ Auto-rendered, type-safe forms with JacForm - zero boilerplate, full validation.
 
 ## Overview
 
-**JacForm** auto-generates complete form UIs from Zod schemas with built-in validation, error handling, and flexible layouts.
+**JacForm** auto-generates complete form UIs from jacSchema schemas with built-in validation, error handling, and flexible layouts.
 
 **Key Features:**
 
@@ -24,7 +24,7 @@ Auto-rendered, type-safe forms with JacForm - zero boilerplate, full validation.
 cl import from "@jac/runtime" { JacForm, jacSchema }
 
 def:pub MyForm -> JsxElement {
-    schema = jacSchema.object({
+    schema = jacSchema({
         email: jacSchema.string().email("Invalid email"),
         password: jacSchema.string().min(8, "Min 8 characters")
     });
@@ -43,7 +43,7 @@ def:pub MyForm -> JsxElement {
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `schema` | `ZodSchema` | **required** | Zod validation schema defining form structure |
+| `schema` | `jacSchema` | **required** | jacSchema validation schema defining form structure |
 | `onSubmit` | `function` | **required** | Async handler called with validated data |
 | `layout` | `string` | `"vertical"` | Layout: `vertical`, `grid`, `horizontal`, `inline` |
 | `gridColumns` | `number` | `2` | Columns for grid layout |
@@ -57,7 +57,7 @@ def:pub MyForm -> JsxElement {
 
 ```jac
 <JacForm
-    schema={ZodSchema}       # Required: Zod validation schema
+    schema={jacSchema}       # Required: jacSchema validation schema
     onSubmit={function}      # Required: Async submit handler
     layout={string}          # Optional: "vertical" | "grid" | "horizontal" | "inline"
     gridColumns={number}     # Optional: Grid columns (default: 2)
@@ -79,7 +79,6 @@ def:pub MyForm -> JsxElement {
 | `.number()` | Number type |
 | `.boolean()` | Boolean type |
 | `.enum([...])` | Enum type (select/radio) |
-| `.object({...})` | Object schema |
 | `.min(n, msg)` | Min length/value |
 | `.max(n, msg)` | Max length/value |
 | `.email(msg)` | Email validation |
@@ -226,7 +225,7 @@ notifications = jacSchema.boolean().default(false);
 ### Cross-Field Validation
 
 ```jac
-schema = jacSchema.object({
+schema = jacSchema({
     password: jacSchema.string().min(8),
     confirmPassword: jacSchema.string().min(8)
 }).refine(

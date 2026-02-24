@@ -35,8 +35,9 @@ glob:
      useParams = reactRouterUseParams,
      Outlet = ReactRouterOutlet,
      JacClientErrorBoundary = ErrorBoundary,
-     jacSchema = z;
+     jacSchema = __createJacSchema(z);
 
+def:pub __createJacSchema(zodLib: any) -> any;
 def:pub useRouter -> dict;
 def:pub navigate(path: str) -> None;
 async def:pub __jacSpawn(left: str, right: str = "", fields: dict = {}) -> any;

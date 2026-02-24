@@ -46,6 +46,22 @@ impl navigate(path: str) -> None {
     window.dispatchEvent(Reflect.construct(PopStateEvent, ["popstate"]));
 }
 
+impl __createJacSchema(zodLib: any) -> any {
+    handler = {
+        "apply": lambda target: any, thisArg: any, argumentsList: any -> any {
+            # When called as jacSchema({...}), call z.object({...})
+            return zodLib.object.apply(zodLib, argumentsList);
+        },
+        "get": lambda target: any, prop: any, receiver: any -> any {
+            # When accessing properties like jacSchema.string(), forward to z
+            return zodLib[prop];
+        }
+    };
+    # Create a dummy function as the proxy target
+    dummyFunc = lambda schema: any -> any { return zodLib.object(schema); };
+    return Reflect.construct(Proxy, [dummyFunc, handler]);
+}
+
 impl __getApiBaseUrl -> str {
     # globalThis.__JAC_API_BASE_URL__ is replaced by Vite's define at build time.
     # Falls back to empty string (same-origin) when not configured.

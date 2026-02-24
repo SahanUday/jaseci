@@ -2,7 +2,7 @@ cl import from "@jac/runtime" { JacForm, jacSchema }
 cl import ".assets.jacform-default.css";
 
 def:pub FieldExamples -> JsxElement {
-    schema = jacSchema.object(
+    schema = jacSchema(
         {
             # Text inputs
             textField: jacSchema.string().min(2, "Min 2 characters"),
