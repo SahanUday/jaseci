@@ -3,6 +3,7 @@
 This document provides a summary of new features, improvements, and bug fixes in each version of **Jac-Client**. For details on changes that might require updates to your existing code, please refer to the [Breaking Changes](../breaking-changes.md) page.
 
 ## jac-client 0.3.1 (Unreleased)
+
 - **Form Handling:** Introduced `jacForm` hook for comprehensive form state management, `jacSchema` for type-safe form validation with custom rules and cross-field logic.
 
 ## jac-client 0.3.0 (Latest Release)

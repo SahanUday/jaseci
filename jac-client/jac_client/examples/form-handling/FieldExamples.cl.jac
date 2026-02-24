@@ -11,7 +11,7 @@ def:pub FieldExamples -> JsxElement {
                 RegExp("^[0-9\\-\\+\\(\\)\\s]*$"),
                 "Phone number contains invalid characters"
             ),
-            
+
             urlField: jacSchema.string().url("Invalid URL"),
             # Password with regex validation and toggle
             passwordField: jacSchema.string().min(
