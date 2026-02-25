@@ -5,6 +5,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 ## jac-client 0.3.1 (Unreleased)
 
 - **Form Handling:** Introduced `jacForm` hook for comprehensive form state management, `JacSchema` for type-safe form validation with custom rules and cross-field logic.
+- **Admin Portal UI Components**: Added reusable UI components for the jac-scale admin portal including buttons, modals, inputs, tables, and layout components built with jac-client.
 - **Custom Import Path Aliases via jac.toml**: Added support for configuring import path aliases in `[plugins.client.paths]`. Define aliases like `"@components/*" = "./components/*"` and they are automatically applied to the generated Vite `resolve.alias` and TypeScript `compilerOptions.paths` in tsconfig.json.
 - **NPM Scoped Registry & Auth Support via jac.toml**: Added support for configuring custom npm registries and authentication tokens directly in `jac.toml` under `[plugins.client.npm]`.
 
