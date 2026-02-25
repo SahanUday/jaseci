@@ -1,19 +1,19 @@
-cl import from "@jac/runtime" { JacForm, jacSchema }
+cl import from "@jac/runtime" { JacForm, JacSchema }
 cl import ".assets.jacform-default.css";
 
 def:pub FieldExamples -> JsxElement {
-    schema = jacSchema(
+    schema = JacSchema(
         {
             # Text inputs
-            textField: jacSchema.string().min(2, "Min 2 characters"),
-            emailField: jacSchema.string().email("Invalid email"),
-            telField: jacSchema.string().min(10, "Min 10 digits").regex(
+            textField: JacSchema.string().min(2, "Min 2 characters"),
+            emailField: JacSchema.string().email("Invalid email"),
+            telField: JacSchema.string().min(10, "Min 10 digits").regex(
                 RegExp("^[0-9\\-\\+\\(\\)\\s]*$"),
                 "Phone number contains invalid characters"
             ),
-            urlField: jacSchema.string().url("Invalid URL"),
+            urlField: JacSchema.string().url("Invalid URL"),
             # Password with regex validation and toggle
-            passwordField: jacSchema.string().min(
+            passwordField: JacSchema.string().min(
                 8, "Password must be at least 8 characters"
             ).regex(
                 RegExp("[A-Z]"), "Password must contain at least one uppercase letter"
@@ -25,26 +25,26 @@ def:pub FieldExamples -> JsxElement {
                 RegExp("[!@#\\$%\\^&\\*]"),
                 "Password must contain at least one special character (!@#$%^&*)"
             ),
-            confirmPassword: jacSchema.string().min(
+            confirmPassword: JacSchema.string().min(
                 8, "Confirm password must be at least 8 characters"
             ),
             # Number and date/time inputs
-            numberField: jacSchema.number().min(1, "Min 1").max(100, "Max 100"),
-            dateField: jacSchema.string().min(1, "Date required"),
-            datetimeField: jacSchema.string().min(1, "DateTime required"),
+            numberField: JacSchema.number().min(1, "Min 1").max(100, "Max 100"),
+            dateField: JacSchema.string().min(1, "Date required"),
+            datetimeField: JacSchema.string().min(1, "DateTime required"),
             # Select (enum)
-            selectField: jacSchema.enum(
+            selectField: JacSchema.enum(
                 ["option1", "option2", "option3"], "Please select an option"
             ),
             # Radio buttons (enum)
-            radioField: jacSchema.enum(["yes", "no", "maybe"], "Please select"),
+            radioField: JacSchema.enum(["yes", "no", "maybe"], "Please select"),
             # Textarea
-            textareaField: jacSchema.string().min(10, "Min 10 characters"),
+            textareaField: JacSchema.string().min(10, "Min 10 characters"),
             # Checkboxes
-            checkboxRequired: jacSchema.boolean().refine(
+            checkboxRequired: JacSchema.boolean().refine(
                 lambda v: any  -> bool { return v == True; }, "Must be checked"
             ),
-            checkboxOptional: jacSchema.boolean().optional()
+            checkboxOptional: JacSchema.boolean().optional()
         }
     ).refine(
         lambda data: any  -> bool { return data.passwordField == data.confirmPassword; },

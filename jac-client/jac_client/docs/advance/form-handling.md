@@ -6,7 +6,7 @@ Auto-rendered, type-safe forms with JacForm - zero boilerplate, full validation.
 
 ## Overview
 
-**JacForm** auto-generates complete form UIs from jacSchema schemas with built-in validation, error handling, and flexible layouts.
+**JacForm** auto-generates complete form UIs from JacSchema schemas with built-in validation, error handling, and flexible layouts.
 
 **Key Features:**
 
@@ -21,12 +21,12 @@ Auto-rendered, type-safe forms with JacForm - zero boilerplate, full validation.
 ## Quick Start
 
 ```jac
-cl import from "@jac/runtime" { JacForm, jacSchema }
+cl import from "@jac/runtime" { JacForm, JacSchema }
 
 def:pub MyForm -> JsxElement {
-    schema = jacSchema({
-        email: jacSchema.string().email("Invalid email"),
-        password: jacSchema.string().min(8, "Min 8 characters")
+    schema = JacSchema({
+        email: JacSchema.string().email("Invalid email"),
+        password: JacSchema.string().min(8, "Min 8 characters")
     });
 
     async def handleSubmit(data: any) -> None {
@@ -43,7 +43,7 @@ def:pub MyForm -> JsxElement {
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `schema` | `jacSchema` | **required** | jacSchema validation schema defining form structure |
+| `schema` | `JacSchema` | **required** | JacSchema validation schema defining form structure |
 | `onSubmit` | `function` | **required** | Async handler called with validated data |
 | `layout` | `string` | `"vertical"` | Layout: `vertical`, `grid`, `horizontal`, `inline` |
 | `gridColumns` | `number` | `2` | Columns for grid layout |
@@ -57,7 +57,7 @@ def:pub MyForm -> JsxElement {
 
 ```jac
 <JacForm
-    schema={jacSchema}       # Required: jacSchema validation schema
+    schema={JacSchema}       # Required: JacSchema validation schema
     onSubmit={function}      # Required: Async submit handler
     layout={string}          # Optional: "vertical" | "grid" | "horizontal" | "inline"
     gridColumns={number}     # Optional: Grid columns (default: 2)
@@ -71,7 +71,7 @@ def:pub MyForm -> JsxElement {
 
 ---
 
-### jacSchema
+### JacSchema
 
 | Method | Usage |
 |--------|-------|
@@ -92,18 +92,18 @@ def:pub MyForm -> JsxElement {
 
 | Type | Schema Example | Config | Notes |
 |------|---------------|--------|-------|
-| **Text** | `jacSchema.string()` | `type: "text"` | Default field type |
-| **Email** | `jacSchema.string().email()` | `type: "email"` | With validation |
-| **Password** | `jacSchema.string()` | `type: "password"` | Supports `showPasswordToggle` |
-| **Tel** | `jacSchema.string()` | `type: "tel"` | Phone number input |
-| **URL** | `jacSchema.string().url()` | `type: "url"` | With validation |
-| **Number** | `jacSchema.number()` | `type: "number"` | Numeric input with min/max |
-| **Date** | `jacSchema.string()` | `type: "date"` | Native date picker |
-| **DateTime** | `jacSchema.string()` | `type: "datetime-local"` | Date and time picker |
-| **Select** | `jacSchema.enum([...])` | `type: "select"` | Dropdown from enum values |
-| **Radio** | `jacSchema.enum([...])` | `type: "radio"` | Radio buttons from enum values |
-| **Textarea** | `jacSchema.string()` | `type: "textarea"`, `rows: 4` | Multi-line text |
-| **Checkbox** | `jacSchema.boolean()` | `type: "checkbox"` | Works with `.optional()`, `.refine()` |
+| **Text** | `JacSchema.string()` | `type: "text"` | Default field type |
+| **Email** | `JacSchema.string().email()` | `type: "email"` | With validation |
+| **Password** | `JacSchema.string()` | `type: "password"` | Supports `showPasswordToggle` |
+| **Tel** | `JacSchema.string()` | `type: "tel"` | Phone number input |
+| **URL** | `JacSchema.string().url()` | `type: "url"` | With validation |
+| **Number** | `JacSchema.number()` | `type: "number"` | Numeric input with min/max |
+| **Date** | `JacSchema.string()` | `type: "date"` | Native date picker |
+| **DateTime** | `JacSchema.string()` | `type: "datetime-local"` | Date and time picker |
+| **Select** | `JacSchema.enum([...])` | `type: "select"` | Dropdown from enum values |
+| **Radio** | `JacSchema.enum([...])` | `type: "radio"` | Radio buttons from enum values |
+| **Textarea** | `JacSchema.string()` | `type: "textarea"`, `rows: 4` | Multi-line text |
+| **Checkbox** | `JacSchema.boolean()` | `type: "checkbox"` | Works with `.optional()`, `.refine()` |
 
 ---
 
@@ -158,27 +158,27 @@ field_config={{
 ### String Validation
 
 ```jac
-email = jacSchema.string()
+email = JacSchema.string()
     .min(1, "Required")
     .email("Invalid email");
 
-password = jacSchema.string()
+password = JacSchema.string()
     .min(8, "Min 8 chars")
     .regex(RegExp("[A-Z]"), "Need uppercase")
     .regex(RegExp("\\d"), "Need number");
 
-phone = jacSchema.string()
+phone = JacSchema.string()
     .regex(RegExp("^[0-9]{10}$"), "10 digits required");
 ```
 
 ### Number Validation
 
 ```jac
-age = jacSchema.number()
+age = JacSchema.number()
     .min(18, "Must be 18+")
     .max(120, "Invalid age");
 
-quantity = jacSchema.number()
+quantity = JacSchema.number()
     .int("Must be integer")
     .positive("Must be positive");
 ```
@@ -186,7 +186,7 @@ quantity = jacSchema.number()
 ### Enum Fields (Select/Radio)
 
 ```jac
-role = jacSchema.enum(
+role = JacSchema.enum(
     ["admin", "user", "guest"],
     "Please select a role"
 );
@@ -205,29 +205,29 @@ field_config={{
 
 ```jac
 # Required checkbox
-agreeToTerms = jacSchema.boolean().refine(
+agreeToTerms = JacSchema.boolean().refine(
     lambda v: any -> bool { return v == True; },
     "Must agree to terms"
 );
 
 # Optional checkbox
-newsletter = jacSchema.boolean().optional();
+newsletter = JacSchema.boolean().optional();
 ```
 
 ### Optional & Default Values
 
 ```jac
-middleName = jacSchema.string().optional();
-country = jacSchema.string().default("USA");
-notifications = jacSchema.boolean().default(false);
+middleName = JacSchema.string().optional();
+country = JacSchema.string().default("USA");
+notifications = JacSchema.boolean().default(false);
 ```
 
 ### Cross-Field Validation
 
 ```jac
-schema = jacSchema({
-    password: jacSchema.string().min(8),
-    confirmPassword: jacSchema.string().min(8)
+schema = JacSchema({
+    password: JacSchema.string().min(8),
+    confirmPassword: JacSchema.string().min(8)
 }).refine(
     lambda data: any -> bool {
         return data.password == data.confirmPassword;

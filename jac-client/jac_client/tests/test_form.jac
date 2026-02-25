@@ -161,7 +161,7 @@ test "form loads and renders" {
                 js_content = resp.read().decode("utf-8", errors="ignore");
                 assert resp.status == 200;
                 assert len(js_content) > 0 , "JS bundle is empty";
-                assert ("JacForm" in js_content or "jacSchema" in js_content) , "Form handling code not found in JS bundle";
+                assert ("JacForm" in js_content or "JacSchema" in js_content) , "Form handling code not found in JS bundle";
             }
         } except (URLError, HTTPError) as exc {
             raise AssertionError(f"Failed to load JS bundle: {exc}") ;

@@ -21,18 +21,18 @@ jac client run
 
 | Type | Schema | Config |
 |------|--------|--------|
-| **Text** | `jacSchema.string()` | `type: "text"` |
-| **Email** | `jacSchema.string().email()` | `type: "email"` |
-| **Password** | `jacSchema.string()` | `type: "password"`, `showPasswordToggle: true` |
-| **Tel** | `jacSchema.string()` | `type: "tel"` |
-| **URL** | `jacSchema.string().url()` | `type: "url"` |
-| **Number** | `jacSchema.number()` | `type: "number"` |
-| **Date** | `jacSchema.string()` | `type: "date"` |
-| **DateTime** | `jacSchema.string()` | `type: "datetime-local"` |
-| **Select** | `jacSchema.enum([...])` | `type: "select"` |
-| **Radio** | `jacSchema.enum([...])` | `type: "radio"` |
-| **Textarea** | `jacSchema.string()` | `type: "textarea"`, `rows: 4` |
-| **Checkbox** | `jacSchema.boolean()` | `type: "checkbox"` |
+| **Text** | `JacSchema.string()` | `type: "text"` |
+| **Email** | `JacSchema.string().email()` | `type: "email"` |
+| **Password** | `JacSchema.string()` | `type: "password"`, `showPasswordToggle: true` |
+| **Tel** | `JacSchema.string()` | `type: "tel"` |
+| **URL** | `JacSchema.string().url()` | `type: "url"` |
+| **Number** | `JacSchema.number()` | `type: "number"` |
+| **Date** | `JacSchema.string()` | `type: "date"` |
+| **DateTime** | `JacSchema.string()` | `type: "datetime-local"` |
+| **Select** | `JacSchema.enum([...])` | `type: "select"` |
+| **Radio** | `JacSchema.enum([...])` | `type: "radio"` |
+| **Textarea** | `JacSchema.string()` | `type: "textarea"`, `rows: 4` |
+| **Checkbox** | `JacSchema.boolean()` | `type: "checkbox"` |
 
 ## Field Configuration Options
 

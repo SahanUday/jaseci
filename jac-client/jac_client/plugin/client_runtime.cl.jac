@@ -35,7 +35,7 @@ glob:
      useParams = reactRouterUseParams,
      Outlet = ReactRouterOutlet,
      JacClientErrorBoundary = ErrorBoundary,
-     jacSchema = __createJacSchema(z);
+     JacSchema = __createJacSchema(z);
 
 def:pub __createJacSchema(zodLib: any) -> any;
 def:pub useRouter -> dict;
