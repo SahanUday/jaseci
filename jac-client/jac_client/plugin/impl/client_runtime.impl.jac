@@ -933,7 +933,9 @@ impl JacForm(props: dict) -> JsxElement {
         labelClassName = config.labelClassName or "";
 
         # Register field and get error state
-        field = form.register(fieldName);
+        # valueAsNumber: true is required for number fields because <input type="number">
+        registerOptions = {"valueAsNumber": True} if fieldType == "number" else {};
+        field = form.register(fieldName, registerOptions);
         error = errors[fieldName];
 
         # Render: wrapper > input > error

@@ -29,7 +29,7 @@ def:pub MyForm -> JsxElement {
         password: JacSchema.string().min(8, "Min 8 characters")
     });
 
-    async def handleSubmit(data: any) -> None {
+    async def handleSubmit(data: dict) -> None {
         console.log("Submitted:", data);
     }
 
