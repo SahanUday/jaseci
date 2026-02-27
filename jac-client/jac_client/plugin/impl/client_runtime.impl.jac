@@ -132,9 +132,7 @@ impl __cacheGet(key: str) -> dict {
 }
 
 # Store an entry in the cache with LRU eviction
-impl __cacheSet(
-    key: str, data: any, ttl: int
-) -> None {
+impl __cacheSet(key: str, data: any, ttl: int) -> None {
     state = __getCacheState();
     # Remove existing entry if present
     if state["cache"][key] {
@@ -173,9 +171,7 @@ impl __overlaps(list1: list, list2: list) -> bool {
 }
 
 # Invalidate all cache entries for a given endpoint key prefix
-impl __invalidateEndpoint(
-    endpoint_key: str
-) -> None {
+impl __invalidateEndpoint(endpoint_key: str) -> None {
     state = __getCacheState();
     keys_to_delete = [];
     for key in Object.keys(state["cache"]) {
@@ -197,9 +193,7 @@ impl __invalidateEndpoint(
 # ============================================================================
 
 # Direct walker fetch (POST /walker/<name>[/<nodeId>])
-impl __doWalkerFetch(
-    walker: str, nodeId: str, fields: dict
-) -> any {
+impl __doWalkerFetch(walker: str, nodeId: str, fields: dict) -> any {
     token = __getLocalStorage("jac_token");
     base_url = __getApiBaseUrl();
     url = f"{base_url}/walker/{walker}";
@@ -228,9 +222,7 @@ impl __doWalkerFetch(
 }
 
 # Direct function fetch (POST /function/<name>)
-impl __doFuncFetch(
-    function_name: str, args: dict
-) -> any {
+impl __doFuncFetch(function_name: str, args: dict) -> any {
     token = __getLocalStorage("jac_token");
     base_url = __getApiBaseUrl();
     headers = {"Content-Type": "application/json"};
@@ -264,9 +256,7 @@ impl __doFuncFetch(
 # ============================================================================
 # AUTO-CACHE DISPATCH — shared by __jacSpawn and __jacCallFunction
 # ============================================================================
-impl __cachedEndpointCall(
-    endpoint_key: str, args_key: str, fetch_fn: any
-) -> any {
+impl __cachedEndpointCall(endpoint_key: str, args_key: str, fetch_fn: any) -> any {
     effects = __getEndpointEffects();
     info = effects[endpoint_key];
     state = __getCacheState();
@@ -312,9 +302,7 @@ impl __cachedEndpointCall(
 # ============================================================================
 # PUBLIC API — __jacSpawn and __jacCallFunction with auto-caching
 # ============================================================================
-impl __jacSpawn(
-    left: str, right: str = "", fields: dict = {}
-) -> any {
+impl __jacSpawn(left: str, right: str = "", fields: dict = {}) -> any {
     # Auth walkers always skip cache
     if left == "login"
     or left == "signup"
@@ -379,8 +367,8 @@ impl jacSignup(username: str, password: str) -> dict {
             return {
                 "success": False,
                 "error": error_data["error"]
-                if error_data["error"] != None
-                else "Signup failed"
+                    if error_data["error"] != None
+                    else "Signup failed"
             };
         } except Exception {
             return {"success": False, "error": error_text};
@@ -870,8 +858,8 @@ impl JacForm(props: dict) -> JsxElement {
                                 boxSizing: "border-box",
                                 border: (
                                     "2px solid #ef4444"
-                                    if error
-                                    else "2px solid #e5e7eb"
+                                        if error
+                                        else "2px solid #e5e7eb"
                                 ),
                                 paddingRight: "2.5rem"
                             }}

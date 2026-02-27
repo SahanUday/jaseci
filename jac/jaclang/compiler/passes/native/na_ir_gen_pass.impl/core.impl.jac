@@ -98,12 +98,24 @@ impl NaIRGenPass.init(
     # Primitive emitter singletons (lazily initialized)
     self._native_emitters: (dict[str, object] | None) = None;
     self._native_builtin_emitter: (object | None) = None;
+    # Reference counting support (Phase RC)
+    self.rc_alloc_fn: (ir.Function | None) = None;
+    self.rc_retain_fn: (ir.Function | None) = None;
+    self.rc_release_simple_fn: (ir.Function | None) = None;
+    self.malloc_fn: (ir.Function | None) = None;
+    self.free_fn: (ir.Function | None) = None;
+    self.struct_release_fns: dict[(str, ir.Function)] = {};
+    self.list_release_fns: dict[(str, ir.Function)] = {};
+    self.dict_release_fns: dict[(str, ir.Function)] = {};
+    self.set_release_fns: dict[(str, ir.Function)] = {};
     super.init(ir_in=ir_in, prog=prog, cancel_token=cancel_token);
 }
 
 # ─── Main Pass Logic ─────────────────────────────────────────
 """Forward-declare, codegen native abilities/entries, and store the LLVM module."""
 impl NaIRGenPass.transform(ir_in: uni.Module) -> uni.Module {
+    # Emit reference counting helper functions (must be first)
+    self._emit_rc_helpers();
     # Process C library imports: import from "libname" { def ...; }
     self._process_clib_imports(self.ir_in);
     # Phase 0: Forward declarations (enums, archetypes, free functions, globals)
@@ -151,6 +163,14 @@ impl NaIRGenPass.transform(ir_in: uni.Module) -> uni.Module {
     # Store LLVM module on AST
     if self.has_native_code {
         self.ir_in.gen.llvm_ir = self.llvm_module;
+        # Debug: dump IR to file
+        import os;
+        _ir_dump_path = os.environ.get("JAC_DUMP_IR", "");
+        if _ir_dump_path {
+            with open(_ir_dump_path, "w") as _f {
+                _f.write(str(self.llvm_module));
+            }
+        }
     }
     return self.ir_in;
 }

@@ -22,8 +22,7 @@ import from 'zod' { z }
 def:pub __jacJsx(tag: any, props: dict = {}, children: any = []) -> JsxElement;
 
 # React hooks re-exported for auto-injection by `has` variables and `can with entry/exit` effects
-glob:
-    pub useState = reactUseState,
+glob:pub useState = reactUseState,
      useEffect = reactUseEffect,
      Router = ReactRouterBrowserRouter,
      Routes = ReactRouterRoutes,
