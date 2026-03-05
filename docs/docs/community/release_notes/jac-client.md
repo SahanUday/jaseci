@@ -2,9 +2,15 @@
 
 This document provides a summary of new features, improvements, and bug fixes in each version of **Jac-Client**. For details on changes that might require updates to your existing code, please refer to the [Breaking Changes](../breaking-changes.md) page.
 
-## jac-client 0.3.3 (Unreleased)
+## jac-client 0.3.4 (Unreleased)
 
-## jac-client 0.3.2 (Latest Release)
+- **HMR Client Error Reporting**: Client-side runtime and module import errors now reported to terminal via Vite WebSocket.
+- Internal: updated jac.toml of all-in-one example to use redis dashboard and mongodb dashboard
+- 2 Minor refactors/changes.
+
+## jac-client 0.3.3 (Latest Release)
+
+## jac-client 0.3.2
 
 - **Chore: Codebase Reformatted**: All `.jac` files reformatted with improved `jac format` (better line-breaking, comment spacing, and ternary indentation).
 - 1 small refactor/change
