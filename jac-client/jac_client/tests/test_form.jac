@@ -148,7 +148,7 @@ test "form loads and renders" {
                 assert '<div id="root">' in page_body , ("React root div not found");
             }
         } except (URLError, HTTPError) as exc {
-            raise AssertionError(f"Failed to load form page: {exc}") ;
+            raise AssertionError(f"Failed to load form page: {exc}");
         }
 
         try {
@@ -164,7 +164,7 @@ test "form loads and renders" {
                 assert ("JacForm" in js_content or "JacSchema" in js_content) , "Form handling code not found in JS bundle";
             }
         } except (URLError, HTTPError) as exc {
-            raise AssertionError(f"Failed to load JS bundle: {exc}") ;
+            raise AssertionError(f"Failed to load JS bundle: {exc}");
         }
     } finally {
         server.terminate();
