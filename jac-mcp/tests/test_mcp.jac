@@ -22,6 +22,13 @@ test "server creation with custom config" {
     assert server.host == "0.0.0.0";
 }
 
+test "server creation with streamable-http transport" {
+    server = JacMcpServer(transport="streamable-http", port=9090, host="0.0.0.0");
+    assert server.transport == "streamable-http";
+    assert server.port == 9090;
+    assert server.host == "0.0.0.0";
+}
+
 # ── Plugin Config Tests ──
 test "get plugin metadata" {
     metadata = JacMcpPluginConfig.get_plugin_metadata();
