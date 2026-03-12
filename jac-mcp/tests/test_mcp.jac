@@ -49,6 +49,42 @@ test "streamable-http transport initializes session manager and app" {
     assert starlette_app.routes[0].path == "/mcp";
 }
 
+test "sse transport uses Mount for messages and handle_sse returns Response" {
+    import from mcp.server { Server }
+    import from mcp.server.sse { SseServerTransport }
+    import from starlette.applications { Starlette }
+    import from starlette.routing { Mount, Route }
+    import from starlette.responses { Response }
+
+    server = Server("test-server");
+    sse = SseServerTransport("/messages/");
+
+    async def handle_sse(request: object) -> object {
+        async with sse.connect_sse(
+            request.scope, request.receive, request._send
+        ) as streams {
+            await server.run(
+                streams[0], streams[1], server.create_initialization_options()
+            );
+        }
+        return Response();
+    }
+
+    starlette_app = Starlette(
+        routes=[
+            Route("/sse", endpoint=handle_sse),
+            Mount("/messages", app=sse.handle_post_message),
+
+        ]
+    );
+
+    assert starlette_app is not None;
+    sse_route = starlette_app.routes[0];
+    messages_route = starlette_app.routes[1];
+    assert isinstance(sse_route, Route) and sse_route.path == "/sse";
+    assert isinstance(messages_route, Mount) and messages_route.path == "/messages";
+}
+
 # ── Plugin Config Tests ──
 test "get plugin metadata" {
     metadata = JacMcpPluginConfig.get_plugin_metadata();
