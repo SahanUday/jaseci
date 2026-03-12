@@ -176,12 +176,12 @@ async def _async_start(srv: JacMcpServer) -> None {
         try {
             import from mcp.server.sse { SseServerTransport }
             import from starlette.applications { Starlette }
-            import from starlette.routing { Route }
+            import from starlette.routing { Mount, Route }
             import uvicorn;
 
             sse = SseServerTransport("/messages/");
 
-            async def handle_sse(request: object) -> object {
+            async def handle_sse(request: object) -> None {
                 async with sse.connect_sse(
                     request.scope, request.receive, request._send
                 ) as streams {
@@ -194,11 +194,7 @@ async def _async_start(srv: JacMcpServer) -> None {
             starlette_app = Starlette(
                 routes=[
                     Route("/sse", endpoint=handle_sse),
-                    Route(
-                        "/messages/",
-                        endpoint=sse.handle_post_message,
-                        methods=["POST"]
-                    ),
+                    Mount("/messages", app=sse.handle_post_message),
 
                 ]
             );
