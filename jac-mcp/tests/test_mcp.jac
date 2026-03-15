@@ -49,40 +49,50 @@ test "streamable-http transport initializes session manager and app" {
     assert starlette_app.routes[0].path == "/mcp";
 }
 
-test "sse transport uses Mount for messages and handle_sse returns Response" {
-    import from mcp.server { Server }
-    import from mcp.server.sse { SseServerTransport }
-    import from starlette.applications { Starlette }
+test "sse _async_start builds correct Mount-based route for messages" {
+    import from unittest.mock { patch, AsyncMock, MagicMock }
+    import from jac_mcp.server { JacMcpServer }
     import from starlette.routing { Mount, Route }
-    import from starlette.responses { Response }
 
-    server = Server("test-server");
-    sse = SseServerTransport("/messages/");
+    captured_apps: list = [];
 
-    async def handle_sse(request: object) -> object {
-        async with sse.connect_sse(
-            request.scope, request.receive, request._send
-        ) as streams {
-            await server.run(
-                streams[0], streams[1], server.create_initialization_options()
-            );
-        }
-        return Response();
+    def fake_config(app: object, **kwargs: object) -> object {
+        captured_apps.append(app);
+        return MagicMock();
     }
 
-    starlette_app = Starlette(
-        routes=[
-            Route("/sse", endpoint=handle_sse),
-            Mount("/messages", app=sse.handle_post_message),
+    mock_serve = AsyncMock();
+    mock_server_instance = MagicMock();
+    mock_server_instance.serve = mock_serve;
+    mock_server_class = MagicMock();
+    mock_server_class.return_value = mock_server_instance;
 
-        ]
+    mock_config_class = MagicMock();
+    mock_config_class.side_effect = fake_config;
+
+    # Pass mocks as positional arg (maps to patch's 'new' parameter)
+    with patch("uvicorn.Config", mock_config_class) {
+        with patch("uvicorn.Server", mock_server_class) {
+            JacMcpServer(transport="sse", port=3001, host="127.0.0.1").start();
+        }
+    }
+
+    assert len(captured_apps) == 1 , "uvicorn.Config should have been called once";
+    app: object = captured_apps[0];
+    routes: list = getattr(app, "routes");
+    assert len(routes) >= 2;
+
+    sse_route: object = routes[0];
+    messages_route: object = routes[1];
+    assert isinstance(sse_route, Route) , f"Expected Route for /sse, got {type(
+        sse_route
+    )}";
+    assert getattr(sse_route, "path") == "/sse";
+    assert isinstance(messages_route, Mount) , (
+        f"Expected Mount for /messages (handle_post_message is an ASGI app, "
+        f"not a Starlette endpoint — use Mount not Route). Got {type(messages_route)}"
     );
-
-    assert starlette_app is not None;
-    sse_route = starlette_app.routes[0];
-    messages_route = starlette_app.routes[1];
-    assert isinstance(sse_route, Route) and sse_route.path == "/sse";
-    assert isinstance(messages_route, Mount) and messages_route.path == "/messages";
+    assert getattr(messages_route, "path") == "/messages";
 }
 
 # ── Plugin Config Tests ──

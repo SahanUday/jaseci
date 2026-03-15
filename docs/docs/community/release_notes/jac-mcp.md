@@ -2,7 +2,7 @@
 
 ## jac-mcp 0.1.5 (Unreleased)
 
-- **Fix SSE transport menthod issue**
+- **Fix SSE transport method issue**
 
 ## jac-mcp 0.1.4 (Latest Release)
 

@@ -196,8 +196,7 @@ async def _async_start(srv: JacMcpServer) -> None {
             starlette_app = Starlette(
                 routes=[
                     Route("/sse", endpoint=handle_sse),
-                    Mount("/messages", app=sse.handle_post_message),
-
+                    Mount("/messages", app=sse.handle_post_message)
                 ]
             );
 
