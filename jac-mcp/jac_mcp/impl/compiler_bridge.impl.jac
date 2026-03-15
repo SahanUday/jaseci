@@ -72,6 +72,15 @@ impl CompilerBridge.parse_snippet(
             }
 
             errors: list[dict] = [];
+
+            # Collect errors from program diagnostics
+            for err in program.errors_had {
+                line_num = err.loc.first_line if err.loc else 0;
+                col_num = err.loc.col_start if err.loc else 0;
+                errors.append({"line": line_num, "col": col_num, "message": err.msg});
+            }
+
+            # Also capture any stderr output as fallback
             stderr_output = captured.getvalue();
             if stderr_output.strip() {
                 for line in stderr_output.strip().split("\n") {
@@ -141,6 +150,24 @@ impl CompilerBridge.typecheck_snippet(
 
             errors: list[dict] = [];
             warnings: list[dict] = [];
+
+            # Collect errors from program diagnostics
+            for err in program.errors_had {
+                line_num = err.loc.first_line if err.loc else 0;
+                col_num = err.loc.col_start if err.loc else 0;
+                errors.append({"line": line_num, "col": col_num, "message": err.msg});
+            }
+
+            # Collect warnings from program diagnostics
+            for warn in program.warnings_had {
+                line_num = warn.loc.first_line if warn.loc else 0;
+                col_num = warn.loc.col_start if warn.loc else 0;
+                warnings.append(
+                    {"line": line_num, "col": col_num, "message": warn.msg}
+                );
+            }
+
+            # Also capture any stderr output as fallback
             stderr_output = captured.getvalue();
             if stderr_output.strip() {
                 for line in stderr_output.strip().split("\n") {
@@ -210,14 +237,15 @@ impl CompilerBridge.format_snippet(code: str) -> dict[str, Any] {
                 };
             }
 
-            # Get formatted source from the result
+            # Get formatted source via mod.unparse()
             formatted = code;
-            if result_prog?.ir and result_prog.ir {
-                if result_prog.ir?.source and result_prog.ir.source?.code {
-                    formatted = result_prog.ir.source.code;
-                }
-            } elif result_prog?.source {
-                formatted = str(result_prog.source);
+            if result_prog?.mod {
+                try {
+                    unparsed = result_prog.mod.unparse();
+                    if unparsed {
+                        formatted = unparsed;
+                    }
+                } except Exception { }
             }
 
             changed = formatted != code;
@@ -280,12 +308,22 @@ impl CompilerBridge.py_to_jac(python_code: str) -> dict[str, Any] {
                 return {"jac_code": "", "warnings": warnings or ["Conversion failed"]};
             }
 
-            # Try to get the unparsed Jac source
+            # Try to get the Jac source via unparse (works for py-to-jac)
             jac_code = "";
-            if ir?.source and ir.source?.code {
-                jac_code = ir.source.code;
-            } elif ir?.gen {
-                jac_code = str(ir.gen.jac) if ir.gen?.jac else "";
+            try {
+                unparsed = ir.unparse();
+                if unparsed {
+                    jac_code = unparsed;
+                }
+            } except Exception { }
+
+            # Fallback: check source.code or gen.jac
+            if not jac_code {
+                if ir?.source and ir.source?.code {
+                    jac_code = ir.source.code;
+                } elif ir?.gen and ir.gen?.jac {
+                    jac_code = str(ir.gen.jac);
+                }
             }
 
             return {"jac_code": jac_code, "warnings": warnings};
@@ -296,6 +334,90 @@ impl CompilerBridge.py_to_jac(python_code: str) -> dict[str, Any] {
     (success, result) = run_with_timeout(_do_py2jac);
     if not success {
         return {"jac_code": "", "warnings": [str(result)]};
+    }
+    return result;
+}
+
+"""Parse Jac code and return its AST."""
+impl CompilerBridge.get_ast_snippet(code: str, fmt: str = "tree") -> dict[str, Any] {
+    if len(code) > MAX_INPUT_SIZE {
+        return {
+            "valid": False,
+            "ast": None,
+            "errors": [
+                {
+                    "line": 0,
+                    "col": 0,
+                    "message": f"Input exceeds maximum size of {MAX_INPUT_SIZE} bytes"
+                }
+            ]
+        };
+    }
+    def _do_ast -> dict[str, Any] {
+        import from jaclang.jac0core.runtime { JacRuntime as Jac }
+        import from jaclang.jac0core.program { JacProgram }
+        import json;
+
+        Jac.setup();
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".jac", delete=False) as f {
+            f.write(code);
+            tmp_path = f.name;
+        }
+
+        try {
+            program = JacProgram();
+            compiler = Jac.get_compiler();
+
+            old_stderr = sys.stderr;
+            captured = io.StringIO();
+            sys.stderr = captured;
+
+            try {
+                ir = compiler.compile(tmp_path, program);
+            } finally {
+                sys.stderr = old_stderr;
+            }
+
+            errors: list[dict] = [];
+            for err in program.errors_had {
+                line_num = err.loc.first_line if err.loc else 0;
+                col_num = err.loc.col_start if err.loc else 0;
+                errors.append({"line": line_num, "col": col_num, "message": err.msg});
+            }
+
+            if len(errors) > 0 or ir is None {
+                return {
+                    "valid": False,
+                    "ast": None,
+                    "errors": errors
+                    or [{"line": 0, "col": 0, "message": "Parse failed"}]
+                };
+            }
+
+            ast_output = "";
+            if fmt == "json" {
+                try {
+                    ast_output = json.dumps(ir.to_dict(), default=str, indent=2);
+                } except Exception {
+                    ast_output = str(ir.to_dict());
+                }
+            } else {
+                ast_output = ir.pp();
+            }
+
+            return {"valid": True, "ast": ast_output, "errors": []};
+        } finally {
+            os.unlink(tmp_path);
+        }
+    }
+    (success, result) = run_with_timeout(_do_ast);
+    if not success {
+        return {
+            "valid": False,
+            "ast": None,
+            "errors": [{"line": 0, "col": 0, "message": str(result)}]
+        };
     }
     return result;
 }
