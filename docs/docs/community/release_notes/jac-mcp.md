@@ -2,6 +2,8 @@
 
 ## jac-mcp 0.1.5 (Unreleased)
 
+-
+
 ## jac-mcp 0.1.4 (Latest Release)
 
 - **Fix streamable HTTP transport method issue**: Refactors the server initialization logic for the `streamable-http` transport method.
