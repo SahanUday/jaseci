@@ -2,10 +2,7 @@
 
 ## jac-mcp 0.1.6 (Unreleased)
 
--
-
-## jac-mcp 0.1.4 (Latest Release)
-
+- **Refactor the tools in compiler bridge**: Refactor the `check_syntax`, `validate_jac`,  `format_jac`, `py_to_jac` and `get_ast` tools and fix the silently return incorrect results issue.
 - **Fix SSE transport method issue**
 
 ## jac-mcp 0.1.5 (Latest Release)
