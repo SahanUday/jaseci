@@ -1,6 +1,7 @@
 # jac-mcp Release Notes
 
 ## jac-mcp 0.1.6 (Unreleased)
+
 -
 
 ## jac-mcp 0.1.4 (Latest Release)
