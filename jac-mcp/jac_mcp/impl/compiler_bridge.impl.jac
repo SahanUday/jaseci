@@ -61,15 +61,7 @@ impl CompilerBridge.parse_snippet(
             program = JacProgram();
             compiler = Jac.get_compiler();
 
-            old_stderr = sys.stderr;
-            captured = io.StringIO();
-            sys.stderr = captured;
-
-            try {
-                ir = compiler.compile(tmp_path, program);
-            } finally {
-                sys.stderr = old_stderr;
-            }
+            ir = compiler.compile(tmp_path, program);
 
             errors: list[dict] = [];
 
@@ -78,16 +70,6 @@ impl CompilerBridge.parse_snippet(
                 line_num = err.loc.first_line if err.loc else 0;
                 col_num = err.loc.col_start if err.loc else 0;
                 errors.append({"line": line_num, "col": col_num, "message": err.msg});
-            }
-
-            # Also capture any stderr output as fallback
-            stderr_output = captured.getvalue();
-            if stderr_output.strip() {
-                for line in stderr_output.strip().split("\n") {
-                    if line.strip() {
-                        errors.append({"line": 0, "col": 0, "message": line.strip()});
-                    }
-                }
             }
 
             valid = len(errors) == 0 and ir is not None;
@@ -138,15 +120,7 @@ impl CompilerBridge.typecheck_snippet(
             program = JacProgram();
             compiler = Jac.get_compiler();
 
-            old_stderr = sys.stderr;
-            captured = io.StringIO();
-            sys.stderr = captured;
-
-            try {
-                ir = compiler.compile(tmp_path, program);
-            } finally {
-                sys.stderr = old_stderr;
-            }
+            ir = compiler.compile(tmp_path, program);
 
             errors: list[dict] = [];
             warnings: list[dict] = [];
@@ -165,19 +139,6 @@ impl CompilerBridge.typecheck_snippet(
                 warnings.append(
                     {"line": line_num, "col": col_num, "message": warn.msg}
                 );
-            }
-
-            # Also capture any stderr output as fallback
-            stderr_output = captured.getvalue();
-            if stderr_output.strip() {
-                for line in stderr_output.strip().split("\n") {
-                    line = line.strip();
-                    if "warning" in line.lower() {
-                        warnings.append({"line": 0, "col": 0, "message": line});
-                    } elif line {
-                        errors.append({"line": 0, "col": 0, "message": line});
-                    }
-                }
             }
 
             valid = len(errors) == 0 and ir is not None;
@@ -245,7 +206,9 @@ impl CompilerBridge.format_snippet(code: str) -> dict[str, Any] {
                     if unparsed {
                         formatted = unparsed;
                     }
-                } except Exception { }
+                } except Exception as e {
+                    return {"formatted": code, "changed": False, "error": str(e)};
+                }
             }
 
             changed = formatted != code;
@@ -369,15 +332,7 @@ impl CompilerBridge.get_ast_snippet(code: str, fmt: str = "tree") -> dict[str, A
             program = JacProgram();
             compiler = Jac.get_compiler();
 
-            old_stderr = sys.stderr;
-            captured = io.StringIO();
-            sys.stderr = captured;
-
-            try {
-                ir = compiler.compile(tmp_path, program);
-            } finally {
-                sys.stderr = old_stderr;
-            }
+            ir = compiler.compile(tmp_path, program);
 
             errors: list[dict] = [];
             for err in program.errors_had {

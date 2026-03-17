@@ -254,6 +254,7 @@ test "parse valid code" {
     assert isinstance(result, dict);
     assert "valid" in result;
     assert "errors" in result;
+    assert result["valid"];
 }
 
 test "parse empty code" {
@@ -280,6 +281,86 @@ test "py to jac basic" {
     assert isinstance(result, dict);
     assert "jac_code" in result;
     assert "warnings" in result;
+}
+
+test "parse invalid code returns structured diagnostics" {
+    result = CompilerBridge.parse_snippet("obj Foo { has x: int = ; }");
+    assert not result["valid"];
+    assert len(result["errors"]) > 0;
+    err = result["errors"][0];
+    assert "line" in err;
+    assert "col" in err;
+    assert "message" in err;
+    # Errors from program.errors_had carry real location info
+    assert err["line"] > 0;
+}
+
+test "parse invalid code does not duplicate errors" {
+    result = CompilerBridge.parse_snippet("obj Foo { has x: int = ; }");
+    assert not result["valid"];
+    messages = [e["message"] for e in result["errors"]];
+    assert len(messages) == len(set(messages));
+}
+
+test "typecheck valid code returns expected keys" {
+    result = CompilerBridge.typecheck_snippet("obj Foo { has x: int = 5; }");
+    assert isinstance(result, dict);
+    assert "valid" in result;
+    assert "errors" in result;
+    assert "warnings" in result;
+    assert result["valid"];
+}
+
+test "typecheck invalid code returns structured diagnostics" {
+    result = CompilerBridge.typecheck_snippet("obj Foo { has x: int = ; }");
+    assert not result["valid"];
+    assert len(result["errors"]) > 0;
+    err = result["errors"][0];
+    assert "line" in err;
+    assert "col" in err;
+    assert "message" in err;
+    assert err["line"] > 0;
+}
+
+test "typecheck invalid code does not duplicate errors" {
+    result = CompilerBridge.typecheck_snippet("obj Foo { has x: int = ; }");
+    assert not result["valid"];
+    messages = [e["message"] for e in result["errors"]];
+    assert len(messages) == len(set(messages));
+}
+
+test "get_ast_snippet valid code returns ast" {
+    result = CompilerBridge.get_ast_snippet("obj Foo { has x: int = 5; }");
+    assert isinstance(result, dict);
+    assert "valid" in result;
+    assert "ast" in result;
+    assert "errors" in result;
+    assert result["valid"];
+    assert result["ast"] is not None;
+}
+
+test "get_ast_snippet json format returns string" {
+    result = CompilerBridge.get_ast_snippet("obj Foo { has x: int = 5; }", "json");
+    assert result["valid"];
+    assert isinstance(result["ast"], str);
+}
+
+test "get_ast_snippet tree format" {
+    result = CompilerBridge.get_ast_snippet("obj Foo { has x: int = 5; }", "tree");
+    assert result["valid"];
+    assert result["ast"] is not None;
+}
+
+test "get_ast_snippet invalid code returns structured errors" {
+    result = CompilerBridge.get_ast_snippet("obj Foo { has x: int = ; }");
+    assert not result["valid"];
+    assert result["ast"] is None;
+    assert len(result["errors"]) > 0;
+    err = result["errors"][0];
+    assert "line" in err;
+    assert "col" in err;
+    assert "message" in err;
+    assert err["line"] > 0;
 }
 
 # ── Prompt Provider Tests ──
