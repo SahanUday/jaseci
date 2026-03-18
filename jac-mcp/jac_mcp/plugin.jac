@@ -76,10 +76,27 @@ class JacCmd {
 
 """Pre-hook to handle mcp command."""
 def _handle_mcp_cmd(ctx: object) -> None {
-    transport = ctx.get_arg("transport", "stdio");
-    port = ctx.get_arg("port", 3001);
-    host = ctx.get_arg("host", "127.0.0.1");
-    inspect_mode = ctx.get_arg("inspect", False);
+    cli_transport: str = str(ctx.get_arg("transport", "stdio"));
+    cli_port: int = int(ctx.get_arg("port", 3001));
+    cli_host: str = str(ctx.get_arg("host", "127.0.0.1"));
+    inspect_mode: bool = bool(ctx.get_arg("inspect", False));
+
+    # Load [plugins.mcp] from jac.toml as fallback defaults
+    import from jaclang.project.config { get_config }
+    jac_cfg = get_config();
+    mcp_cfg: dict[str, object] = {};
+    if jac_cfg {
+        mcp_cfg = jac_cfg.get_plugin_config("mcp");
+    }
+
+    # Priority: CLI arg (if explicitly set) > jac.toml > CLI default
+    transport: str = cli_transport
+        if cli_transport != "stdio"
+        else str(mcp_cfg.get("transport", cli_transport));
+    port: int = cli_port if cli_port != 3001 else int(mcp_cfg.get("port", cli_port));
+    host: str = cli_host
+        if cli_host != "127.0.0.1"
+        else str(mcp_cfg.get("host", cli_host));
 
     if inspect_mode {
         _print_inspect();
