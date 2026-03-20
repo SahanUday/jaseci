@@ -79,7 +79,7 @@ def _handle_mcp_cmd(ctx: object) -> None {
     transport = ctx.get_arg("transport", "stdio");
     port = ctx.get_arg("port", 3001);
     host = ctx.get_arg("host", "127.0.0.1");
-    inspect_mode: bool = bool(ctx.get_arg("inspect", False));
+    inspect_mode = ctx.get_arg("inspect", False);
 
     # Load [plugins.mcp] from jac.toml as fallback defaults
     import from jaclang.project.config { get_config }
