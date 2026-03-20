@@ -623,6 +623,8 @@ test "CLI defaults used when no jac.toml is present" {
     assert ctor_kwargs["transport"] == "stdio";
     assert ctor_kwargs["port"] == 3001;
     assert ctor_kwargs["host"] == "127.0.0.1";
+}
+
 test "all prompt messages use only MCP-valid roles" {
     pp = PromptProvider();
     valid_roles = ["user", "assistant"];
