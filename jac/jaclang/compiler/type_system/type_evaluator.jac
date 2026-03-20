@@ -107,6 +107,8 @@ obj PrefetchedTypes {
         mapping_class: TypeBase | None = None,
         template_class: TypeBase | None = None,
         type_var_class: TypeBase | None = None,
+        param_spec_class: TypeBase | None = None,
+        type_var_tuple_class: TypeBase | None = None,
         classmethod_class: TypeBase | None = None,
         # Prefetch from typing.pyi file
         protocol_class: TypeBase | None = None,
@@ -185,6 +187,10 @@ obj TypeEvaluator {
     def is_any_type(ty: TypeBase) -> bool;
     # Check if a type is the TypeVar class itself (the callable used to create TypeVars).
     def is_typevar_class(ty: TypeBase) -> bool;
+    # Check if a type is the ParamSpec class itself (not a TypeVarType instance).
+    def is_paramspec_class(ty: TypeBase) -> bool;
+    # Check if a type is the TypeVarTuple class itself (not a TypeVarType instance).
+    def is_type_var_tuple_class(ty: TypeBase) -> bool;
     # Comments from pyright:
     # // Determines if the source type can be assigned to the dest type.
     # // If constraint are provided, type variables within the destType are
@@ -245,6 +251,14 @@ obj TypeEvaluator {
     def _is_expr_self(expr: uni.Expr) -> bool;
     def _is_expr_super(expr: uni.Expr) -> bool;
     def _get_enclosing_function(nd: uni.UniNode) -> uni.Ability | None;
+    def _get_enclosing_return_scope(
+        nd: uni.UniNode
+    ) -> uni.Ability | uni.LambdaExpr | None;
+
+    def _get_declared_return_type(
+        scope: uni.Ability | uni.LambdaExpr
+    ) -> TypeBase | None;
+
     def _get_enclosing_method(nd: uni.UniNode) -> uni.Ability | None;
     def _get_enclosing_class(nd: uni.UniNode) -> uni.Archetype | None;
     def _get_type_of_self(node_: uni.SpecialVarRef) -> TypeBase;
