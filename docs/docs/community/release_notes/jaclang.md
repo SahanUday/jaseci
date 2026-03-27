@@ -18,6 +18,7 @@ This document provides a summary of new features, improvements, and bug fixes in
 - **Refactor: Compiler Passes Converted from `class` to `obj` with `postinit`**: All compiler pass classes now use the `obj` style with `has` declarations and `postinit` methods instead of `class` with custom `init`. This aligns passes with Jac's dataclass-like initialization pattern.
 - **Refactor: Native Pass `has` Declarations and Duplicate Cleanup**: `NaIRGenPass` now declares all 83 instance attributes in `has` with proper defaults. Removed ~500 lines of duplicate method declarations and stub implementations from `primitives_native`.
 - **Refactor: TypeEvaluator Converted to `obj` Style with `has` and `postinit`**: `TypeEvaluator` now uses explicit `has` declarations for all 24 instance attributes with proper defaults, replacing the manual `init` method with `postinit`.
+- **Fix: Project Dependencies Now Available to Subprocesses**: Packages installed via `jac install` (stored in `.jac/venv/`) are now accessible to subprocesses spawned from your code. Previously, running `subprocess.Popen(["jac", "mcp", ...])` failed because the venv's `bin/` directory wasn't in PATH. Now `add_venv_to_path()` also prepends the venv's `bin/` directory to `os.environ["PATH"]`, so commands like `jac mcp` work correctly when jac-mcp is installed as a project dependency in `jac.toml`.
 
 ## jaclang 0.13.1 (Latest Release)
 
