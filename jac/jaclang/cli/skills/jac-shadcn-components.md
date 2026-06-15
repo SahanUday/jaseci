@@ -437,7 +437,7 @@ Consolidated quick-reference. See Import patterns and component selection sectio
 
 **Import paths must be quoted strings.** Unquoted hyphens cause a parse error. Underscores in the module path silently resolve to nothing.
 
-```jac
+```
 import from ".ui.dropdown-menu" { DropdownMenu }   # correct - quoted, hyphenated
 import from .ui.dropdown-menu { DropdownMenu }      # WRONG - unquoted, parse error
 import from ".ui.dropdown_menu" { DropdownMenu }    # WRONG - underscore, resolves to nothing

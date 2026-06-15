@@ -25,7 +25,7 @@ Read before building any page. These values must be used consistently.
 
 All marketing sections wrap content in:
 
-```jac
+```
 <div className="mx-auto max-w-7xl pl-4 pr-4 sm:pl-6 sm:pr-6 lg:pl-8 lg:pr-8">
 ```
 
@@ -50,7 +50,7 @@ All headlines at `text-3xl` or above MUST have `tracking-tight` and `text-balanc
 
 Every mid-page marketing section uses this header above the content grid:
 
-```jac
+```
 <div className="mx-auto max-w-2xl text-center">
     <Badge variant="outline" className="mb-4">Eyebrow label</Badge>
     <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">
@@ -99,7 +99,7 @@ Minimal structural skeletons with the non-obvious rules for each. Use these as s
 
 ### Auth card (centered viewport)
 
-```jac
+```
 <div className="flex min-h-svh items-center justify-center pt-12 pb-12 pl-4 pr-4">
     <Card className="w-full max-w-sm">
         <CardHeader>
@@ -131,7 +131,7 @@ Minimal structural skeletons with the non-obvious rules for each. Use these as s
 
 ### App shell with sidebar
 
-```jac
+```
 <SidebarProvider>
     <Sidebar collapsible="offcanvas">
         <SidebarHeader>...</SidebarHeader>
@@ -164,7 +164,7 @@ Minimal structural skeletons with the non-obvious rules for each. Use these as s
 
 ### Data table in card
 
-```jac
+```
 <Card>
     <CardHeader>
         <div className="flex items-center justify-between">
@@ -209,7 +209,7 @@ Minimal structural skeletons with the non-obvious rules for each. Use these as s
 
 ### Stats row (KPI cards)
 
-```jac
+```
 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
     <Card>
         <CardHeader>
@@ -237,7 +237,7 @@ Minimal structural skeletons with the non-obvious rules for each. Use these as s
 
 ### Pricing grid (3-tier)
 
-```jac
+```
 <div className="mx-auto mt-12 grid max-w-5xl grid-cols-1 gap-6 lg:grid-cols-3">
     <Card className={cn("relative flex flex-col", isPopular and "border-primary shadow-lg ring-1 ring-primary" or "")}>
         {isPopular and <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Most Popular</Badge> or None}
@@ -263,7 +263,7 @@ Minimal structural skeletons with the non-obvious rules for each. Use these as s
 
 ### CTA banner (primary background)
 
-```jac
+```
 <Card className="overflow-hidden bg-primary text-primary-foreground">
     <div className="grid gap-8 pt-8 pb-8 pl-8 pr-8 lg:grid-cols-[1fr_auto] lg:items-center">
         <div>
@@ -287,7 +287,7 @@ Minimal structural skeletons with the non-obvious rules for each. Use these as s
 
 ### Empty state
 
-```jac
+```
 <div className="flex min-h-[400px] items-center justify-center">
     <Empty>
         <EmptyHeader>
@@ -313,7 +313,7 @@ Minimal structural skeletons with the non-obvious rules for each. Use these as s
 
 ### Marketing section
 
-```jac
+```
 <section className="pt-16 pb-16 sm:pt-24 sm:pb-24">
     <div className="mx-auto max-w-7xl pl-4 pr-4 sm:pl-6 sm:pr-6 lg:pl-8 lg:pr-8">
         <div className="mx-auto max-w-2xl text-center">
