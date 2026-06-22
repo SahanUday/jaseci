@@ -96,7 +96,7 @@ auth_redirect = "/signin"
 
 **Global providers (`app` export)** - export `def:pub app` from `main.jac` to wrap the entire router with global providers (theme, query client, auth context, etc.). The router tree is passed as `children`:
 
-```jac
+```
 # main.jac
 cl import from "@jac/runtime" { ... }
 cl import from .providers.ThemeProvider { ThemeProvider }
