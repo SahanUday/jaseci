@@ -91,6 +91,15 @@ test "a tool call from conversation= reaches the summariser as a called line" {
 }
 
 
+test "a tool call with text keeps both in the summariser input" {
+    for (shape, msg) in tool_call_shapes("LET_ME_CHECK") {
+        text = summariser_input(ask_with_compaction(seeded_history(msg)));
+        assert "LET_ME_CHECK" in text , f"{shape}: the assistant text is lost:\n{text}";
+        assert "called: lookup(" in text , f"{shape}: the tool call is lost:\n{text}";
+    }
+}
+
+
 test "the model is sent a tool call from conversation= as a dict" {
     for (shape, msg) in tool_call_shapes() {
         history = seeded_history(msg);
