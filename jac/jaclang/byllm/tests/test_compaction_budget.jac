@@ -5,14 +5,22 @@ shrink are budgeted in tokens too. These tests pin that with the default setting
 keep three assistant rounds.
 """
 
+import litellm;
+
 import jaclang.byllm.llm as _byllm_llm_mod;
 import from jaclang.byllm.lib { MockLLM }
-import from support { call, finish, roles, sent_messages }
+import from support { call, fail, finish, roles, sent_messages }
 
 
 # About 300 tokens: bigger than the tail budget of a 1000-token window.
 def read_chunk -> str {
     return "x" * 1200;
+}
+
+
+# About 10000 tokens: far over the tail budget of a 1000-token window.
+def read_huge -> str {
+    return "x" * 40000;
 }
 
 
@@ -35,6 +43,30 @@ def make_round(idx: int, result_chars: int) -> list[any] {
             "name": "search"
         }
     ];
+}
+
+
+def make_parallel_round(idx: int, result_chars: list[int]) -> list[any] {
+    return [
+        {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [
+                {
+                    "id": f"call_{idx}_{n}",
+                    "function": {"name": "search", "arguments": "{}"}
+                } for n in range(len(result_chars))
+            ]
+        }
+    ]
+        + [
+            {
+                "role": "tool",
+                "content": "r" * chars,
+                "tool_call_id": f"call_{idx}_{n}",
+                "name": "search"
+            } for (n, chars) in enumerate(result_chars)
+        ];
 }
 
 
@@ -97,4 +129,78 @@ test "the kept tail is the newest rounds that fit the token budget" {
             f"{label}: kept {kept_call_ids(compacted)}"
         );
     }
+}
+
+
+test "a context overflow caused by one huge tool result is recovered by truncating it" {
+    llm = MockLLM(
+        ctx_window=1000,
+        outputs=[
+            call("read_huge"),
+            fail(
+                litellm.exceptions.ContextWindowExceededError(
+                    message="ctx exceeded", model="mockllm", llm_provider="openai"
+                )
+            ),
+            finish("ok")
+        ]
+    );
+
+    def ask(q: str) -> str by llm(tools=[read_huge]);
+
+    assert ask("go") == "ok";
+    # The overflowing request, then the retry; only the retry carries the clipped result.
+    overflowed = sent_messages(llm, 1)[-1]["content"];
+    retried = sent_messages(llm, 2)[-1]["content"];
+    assert len(overflowed) == 40000;
+    assert len(retried) < 2000;
+    assert retried.startswith("x" * 100);
+    assert "[truncated" in retried;
+    assert llm.exhausted();
+}
+
+
+test "a tail over the token budget has its tool results truncated in a copy" {
+    # A 4000-token window gives a tail budget of 1000 tokens.
+    messages = history(1, 100) + make_parallel_round(2, [8000, 8000]);
+    original_results = [
+        m["content"]
+        for m in messages
+        if m["role"] == "tool"
+    ];
+    compacted: list[any] = list(
+        _byllm_llm_mod._default_compact(
+            messages, 3, MockLLM(outputs=["S"]), ctx_window=4000
+        )
+    );
+
+    # The two results of the kept round share the budget: 2000 characters each.
+    clipped = [
+        m["content"]
+        for m in compacted
+        if m["role"] == "tool"
+    ];
+    assert len(clipped) == 2;
+    for content in clipped {
+        assert 2000 <= len(content) < 2100;
+        assert "[truncated: 6000 characters removed]" in content;
+    }
+    assert [
+        m["content"]
+        for m in messages
+        if m["role"] == "tool"
+    ]
+        == original_results;
+}
+
+
+test "a tail within the token budget is kept as it is" {
+    messages = history(3, 1000);
+    compacted: list[any] = list(
+        _byllm_llm_mod._default_compact(
+            messages, 3, MockLLM(outputs=["S"]), ctx_window=4000
+        )
+    );
+
+    assert compacted[2:] == messages[2:];
 }

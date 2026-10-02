@@ -467,6 +467,9 @@ def _tail_start(messages: list[any], keep_recent: int, budget: int) -> int {
         for i in range(2, len(messages))
         if _message_role(messages[i]) == "assistant"
     ];
+    if not rounds {
+        return 2;
+    }
     kept = min(keep_recent, len(rounds));
     while kept > 1
         and budget > 0
@@ -474,6 +477,35 @@ def _tail_start(messages: list[any], keep_recent: int, budget: int) -> int {
         kept -= 1;
     }
     return rounds[-kept] if kept > 0 else len(messages);
+}
+
+
+def _clip_content(msg: dict[str, any], max_chars: int) -> dict[str, any] {
+    content = msg.get("content");
+    if not isinstance(content, str) or len(content) <= max_chars {
+        return msg;
+    }
+    dropped = len(content) - max_chars;
+    clipped = dict(msg);
+    clipped["content"] = f"{content[:max_chars]}\n[truncated: {dropped} characters removed]";
+    return clipped;
+}
+
+
+def _clip_tool_results(tail: list[any], budget: int) -> list[any] {
+    tool_count = sum(
+        1
+        for msg in tail
+        if _message_role(msg) == "tool"
+    );
+    if budget <= 0 or not tool_count or _estimate_tokens(tail) <= budget {
+        return tail;
+    }
+    max_chars = budget * _CHARS_PER_TOKEN // tool_count;
+    return [
+        _clip_content(msg, max_chars) if _message_role(msg) == "tool" else msg
+        for msg in tail
+    ];
 }
 
 
@@ -488,12 +520,12 @@ def _default_compact(
         return messages;
     }
 
-    tail_start = _tail_start(
-        messages, keep_recent, int(ctx_window * _TAIL_BUDGET_RATIO)
-    );
+    tail_budget = int(ctx_window * _TAIL_BUDGET_RATIO);
+    tail_start = _tail_start(messages, keep_recent, tail_budget);
+    kept_tail = _clip_tool_results(messages[tail_start:], tail_budget);
     compact_slice = messages[2:tail_start];
     if not compact_slice {
-        return messages;
+        return messages[:tail_start] + kept_tail;
     }
 
     history_text = "\n".join(_compaction_line(msg) for msg in compact_slice);
@@ -523,7 +555,7 @@ def _default_compact(
         "role": "user",
         "content": f"[Compacted context summary]\n{summary}"
     };
-    return [messages[0], messages[1], summary_msg] + messages[tail_start:];
+    return [messages[0], messages[1], summary_msg] + kept_tail;
 }
 
 
@@ -673,8 +705,9 @@ impl BaseLLM._compact_messages(mt_run: MTRuntime, cp: dict[str, any]) -> None {
             msg_dicts, keep_recent, model_for_compaction, mt_run, int(cp["ctx_window"])
         );
     }
-    removed = original_len - len(compacted);
-    if removed == 0 and original_len >= 4 {
+    tokens_before = _estimate_tokens(msg_dicts);
+    tokens_after = _estimate_tokens(compacted);
+    if tokens_after >= tokens_before and original_len >= 4 {
         raise CompactionNotEffectiveError(
             "Compaction produced no reduction in message history - "
             "check on_compaction hook or compaction model."
@@ -682,10 +715,8 @@ impl BaseLLM._compact_messages(mt_run: MTRuntime, cp: dict[str, any]) -> None {
     }
     mt_run.messages = compacted;
     logger.info(
-        f"byLLM compaction: reduced message list from {original_len} to {len(
-            compacted
-        )} "
-        f"({removed} messages replaced with summary)"
+        f"byLLM compaction: reduced message list from {original_len} to "
+        f"{len(compacted)} messages, about {tokens_before} to {tokens_after} tokens"
     );
 }
 
