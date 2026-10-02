@@ -413,74 +413,90 @@ def _copy_for_compaction(model: BaseLLM) -> BaseLLM {
 }
 
 
+glob _CHARS_PER_TOKEN: int = 4,
+     _TAIL_BUDGET_RATIO: float = 0.25;
+
+
+def _message_role(msg: any) -> str {
+    return str(msg.get("role") if isinstance(msg, dict) else msg?.role);
+}
+
+
+def _compaction_line(msg: any) -> str {
+    if not isinstance(msg, dict) {
+        return str(msg);
+    }
+    role = msg.get("role", "");
+    content = msg.get("content") or "";
+    if isinstance(content, list) {
+        content = " ".join(
+            p.get("text", "") if isinstance(p, dict) else str(p) for p in content
+        );
+    }
+    if str(role) == "assistant" and not content {
+        tool_calls: any = msg.get("tool_calls") or [];
+        if tool_calls {
+            descs: list[str] = [];
+            for tc in tool_calls {
+                fn = tc.get("function", {})
+                    if isinstance(tc, dict)
+                    else (tc?.function or {});
+                name = (fn.get("name", "?") if isinstance(fn, dict) else fn?.name)
+                    or "?";
+                args = (
+                    fn.get("arguments", "") if isinstance(fn, dict) else fn?.arguments
+                )
+                    or "";
+                descs.append(f"{name}({args})");
+            }
+            content = "called: " + "; ".join(descs);
+        }
+    }
+    return f"[{role}] {content}";
+}
+
+
+def _estimate_tokens(messages: list[any]) -> int {
+    return sum(len(_compaction_line(msg)) for msg in messages) // _CHARS_PER_TOKEN;
+}
+
+
+def _tail_start(messages: list[any], keep_recent: int, budget: int) -> int {
+    rounds = [
+        i
+        for i in range(2, len(messages))
+        if _message_role(messages[i]) == "assistant"
+    ];
+    kept = min(keep_recent, len(rounds));
+    while kept > 1
+        and budget > 0
+        and _estimate_tokens(messages[rounds[-kept]:]) > budget {
+        kept -= 1;
+    }
+    return rounds[-kept] if kept > 0 else len(messages);
+}
+
+
 def _default_compact(
     messages: list[any],
     keep_recent: int,
     model: BaseLLM,
-    parent_mt_run: MTRuntime | None = None
+    parent_mt_run: MTRuntime | None = None,
+    ctx_window: int = 0
 ) -> list[any] {
     if len(messages) < 4 {
         return messages;
     }
 
-    kept_tail: list[any] = [];
-    assistant_rounds = 0;
-    i = len(messages) - 1;
-    while i >= 2 and assistant_rounds < keep_recent {
-        msg = messages[i];
-        role = msg.get("role") if isinstance(msg, dict) else msg?.role;
-        if str(role) == "assistant" {
-            assistant_rounds += 1;
-        }
-        kept_tail.insert(0, msg);
-        i -= 1;
-    }
-
-    compact_slice = messages[2:i + 1];
+    tail_start = _tail_start(
+        messages, keep_recent, int(ctx_window * _TAIL_BUDGET_RATIO)
+    );
+    compact_slice = messages[2:tail_start];
     if not compact_slice {
         return messages;
     }
 
-    lines: list[str] = [];
-    for msg in compact_slice {
-        if isinstance(msg, dict) {
-            role = msg.get("role", "");
-            content = msg.get("content") or "";
-            if isinstance(content, list) {
-                content = " ".join(
-                    p.get("text", "") if isinstance(p, dict) else str(p)
-                    for p in content
-                );
-            }
-            if str(role) == "assistant" and not content {
-                tool_calls: any = msg.get("tool_calls") or [];
-                if tool_calls {
-                    descs: list[str] = [];
-                    for tc in tool_calls {
-                        fn = tc.get("function", {})
-                            if isinstance(tc, dict)
-                            else (tc?.function or {});
-                        name = (
-                            fn.get("name", "?") if isinstance(fn, dict) else fn?.name
-                        )
-                            or "?";
-                        args = (
-                            fn.get("arguments", "")
-                                if isinstance(fn, dict)
-                                else fn?.arguments
-                        )
-                            or "";
-                        descs.append(f"{name}({args})");
-                    }
-                    content = "called: " + "; ".join(descs);
-                }
-            }
-            lines.append(f"[{role}] {content}");
-        } else {
-            lines.append(str(msg));
-        }
-    }
-    history_text = "\n".join(lines);
+    history_text = "\n".join(_compaction_line(msg) for msg in compact_slice);
     summary_prompt = (
         "Summarise the following agent tool-call history concisely. "
         "Preserve key findings, decisions, and intermediate results that "
@@ -507,7 +523,7 @@ def _default_compact(
         "role": "user",
         "content": f"[Compacted context summary]\n{summary}"
     };
-    return [messages[0], messages[1], summary_msg] + kept_tail;
+    return [messages[0], messages[1], summary_msg] + messages[tail_start:];
 }
 
 
@@ -596,7 +612,7 @@ impl BaseLLM._maybe_compact(
             f"({prompt_tokens / ctx_window:.0%}) >= threshold {comp_threshold:.0%}. "
             "Compacting message history."
         );
-        self._compact_messages(mt_run, int(cp["keep_recent"]), cp["model"]);
+        self._compact_messages(mt_run, cp);
         return True;
     }
     return False;
@@ -619,14 +635,14 @@ impl BaseLLM._emergency_compact_retry(
     logger.warning(
         "byLLM compaction: context window exceeded, triggering emergency compaction."
     );
-    self._compact_messages(mt_run, int(cp["keep_recent"]), cp["model"]);
+    self._compact_messages(mt_run, cp);
     return self.dispatch_no_streaming(mt_run);
 }
 
 
-impl BaseLLM._compact_messages(
-    mt_run: MTRuntime, keep_recent: int, comp_model: str | None
-) -> None {
+impl BaseLLM._compact_messages(mt_run: MTRuntime, cp: dict[str, any]) -> None {
+    keep_recent = int(cp["keep_recent"]);
+    comp_model = cp["model"];
     on_compaction = (
         mt_run.call_params.get("on_compaction") or self.call_params.get("on_compaction")
     );
@@ -654,7 +670,7 @@ impl BaseLLM._compact_messages(
             model_for_compaction = _copy_for_compaction(self);
         }
         compacted = _default_compact(
-            msg_dicts, keep_recent, model_for_compaction, mt_run
+            msg_dicts, keep_recent, model_for_compaction, mt_run, int(cp["ctx_window"])
         );
     }
     removed = original_len - len(compacted);
