@@ -162,7 +162,7 @@ test "a context overflow caused by one huge tool result is recovered by truncati
 
 test "a tail over the token budget has its tool results truncated in a copy" {
     # A 4000-token window gives a tail budget of 1000 tokens.
-    messages = history(1, 100) + make_parallel_round(2, [8000, 8000]);
+    messages = history(1, 1000) + make_parallel_round(2, [8000, 8000]);
     original_results = [
         m["content"]
         for m in messages
@@ -203,4 +203,22 @@ test "a tail within the token budget is kept as it is" {
     );
 
     assert compacted[2:] == messages[2:];
+}
+
+
+test "a slice too small to be worth a summariser call is left alone" {
+    # A 4000-token window skips slices under 200 tokens (800 characters).
+    cases = [("a few small results", 100, 0), ("results past the minimum", 1000, 1)];
+    for (label, result_chars, summariser_calls) in cases {
+        messages = history(3, result_chars);
+        summariser = MockLLM(outputs=["S"]);
+        compacted: list[any] = list(
+            _byllm_llm_mod._default_compact(messages, 1, summariser, ctx_window=4000)
+        );
+
+        assert len(summariser.seen) == summariser_calls , (
+            f"{label}: {len(summariser.seen)} summariser calls"
+        );
+        assert (compacted == messages) == (summariser_calls == 0) , label;
+    }
 }

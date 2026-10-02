@@ -414,7 +414,8 @@ def _copy_for_compaction(model: BaseLLM) -> BaseLLM {
 
 
 glob _CHARS_PER_TOKEN: int = 4,
-     _TAIL_BUDGET_RATIO: float = 0.25;
+     _TAIL_BUDGET_RATIO: float = 0.25,
+     _MIN_SLICE_RATIO: float = 0.05;
 
 
 def _message_role(msg: any) -> str {
@@ -524,7 +525,7 @@ def _default_compact(
     tail_start = _tail_start(messages, keep_recent, tail_budget);
     kept_tail = _clip_tool_results(messages[tail_start:], tail_budget);
     compact_slice = messages[2:tail_start];
-    if not compact_slice {
+    if _estimate_tokens(compact_slice) <= int(ctx_window * _MIN_SLICE_RATIO) {
         return messages[:tail_start] + kept_tail;
     }
 
