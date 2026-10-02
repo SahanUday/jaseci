@@ -9,7 +9,12 @@ import litellm;
 
 import jaclang.byllm.llm as _byllm_llm_mod;
 import from jaclang.byllm.lib { MockLLM }
-import from support { call, fail, finish, roles, sent_messages }
+import from support { call, capture_loguru, fail, finish, roles, sent_messages }
+
+
+def step -> str {
+    return "stepped";
+}
 
 
 # About 300 tokens: bigger than the tail budget of a 1000-token window.
@@ -221,4 +226,47 @@ test "a slice too small to be worth a summariser call is left alone" {
         );
         assert (compacted == messages) == (summariser_calls == 0) , label;
     }
+}
+
+
+test "a threshold crossing with nothing worth summarising neither fails nor calls the summariser" {
+    llm = MockLLM(
+        ctx_window=1000,
+        outputs=[
+            call("step", usage={"prompt_tokens": 100}),
+            call("step", usage={"prompt_tokens": 900}),
+            finish("ok")
+        ]
+    );
+
+    def ask(q: str) -> str by llm(tools=[step]);
+
+    with capture_loguru() as logs {
+        assert ask("go") == "ok";
+    }
+    assert [len(m) for m in llm.sent("messages")] == [2, 4, 6];
+    assert "Compacting message history" in logs.text();
+    assert "could not reduce the message history" in logs.text();
+}
+
+
+test "a history still over the threshold after compaction lets the call continue" {
+    llm = MockLLM(
+        ctx_window=1000,
+        outputs=[
+            call("read_chunk", usage={"prompt_tokens": 100}),
+            call("read_chunk", usage={"prompt_tokens": 900}),
+            "SUMMARY_TEXT",
+            call("read_chunk", usage={"prompt_tokens": 850}),
+            finish("ok")
+        ]
+    );
+
+    def ask(q: str) -> str by llm(tools=[read_chunk]);
+
+    with capture_loguru() as logs {
+        assert ask("go") == "ok";
+    }
+    assert llm.exhausted();
+    assert "still at or above threshold" in logs.text();
 }

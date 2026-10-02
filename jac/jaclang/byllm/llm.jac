@@ -192,7 +192,7 @@ obj BaseLLM {
         mt_run: MTRuntime, just_compacted: bool, cp: dict[str, any]
     ) -> CompletionResult;
 
-    def _compact_messages(mt_run: MTRuntime, cp: dict[str, any]) -> None;
+    def _compact_messages(mt_run: MTRuntime, cp: dict[str, any]) -> bool;
 }
 
 obj MockLLM(BaseLLM) {

@@ -632,21 +632,27 @@ impl BaseLLM._maybe_compact(
     );
     if prompt_tokens > 0 and prompt_tokens / ctx_window >= comp_threshold {
         if just_compacted {
-            raise CompactionNotEffectiveError(
-                f"{prompt_tokens}/{ctx_window} tokens "
+            logger.warning(
+                f"byLLM compaction: {prompt_tokens}/{ctx_window} tokens "
                 f"({prompt_tokens / ctx_window:.0%}) still at or above threshold "
-                f"{comp_threshold:.0%} after compaction - provide a custom "
-                "on_compaction hook, increase ctx_window, or switch to a model "
-                "with a larger context window."
+                f"{comp_threshold:.0%} after compaction. Continuing: the provider's "
+                "own limit decides. Provide a custom on_compaction hook, increase "
+                "ctx_window, or switch to a model with a larger context window."
             );
+            return True;
         }
         logger.info(
             f"byLLM compaction: {prompt_tokens}/{ctx_window} tokens "
             f"({prompt_tokens / ctx_window:.0%}) >= threshold {comp_threshold:.0%}. "
             "Compacting message history."
         );
-        self._compact_messages(mt_run, cp);
-        return True;
+        if self._compact_messages(mt_run, cp) {
+            return True;
+        }
+        logger.warning(
+            "byLLM compaction: could not reduce the message history (nothing "
+            "worth summarising). Continuing: the provider's own limit decides."
+        );
     }
     return False;
 }
@@ -660,7 +666,7 @@ impl BaseLLM._emergency_compact_retry(
     }
     if just_compacted {
         raise CompactionNotEffectiveError(
-            "Context window exceeded again after emergency compaction - "
+            "Context window exceeded again after compaction - "
             "provide a custom on_compaction hook, increase ctx_window, "
             "or switch to a model with a larger context window."
         );
@@ -668,12 +674,17 @@ impl BaseLLM._emergency_compact_retry(
     logger.warning(
         "byLLM compaction: context window exceeded, triggering emergency compaction."
     );
-    self._compact_messages(mt_run, cp);
+    if not self._compact_messages(mt_run, cp) and len(mt_run.messages) >= 4 {
+        raise CompactionNotEffectiveError(
+            "Compaction produced no reduction in message history - "
+            "check on_compaction hook or compaction model."
+        );
+    }
     return self.dispatch_no_streaming(mt_run);
 }
 
 
-impl BaseLLM._compact_messages(mt_run: MTRuntime, cp: dict[str, any]) -> None {
+impl BaseLLM._compact_messages(mt_run: MTRuntime, cp: dict[str, any]) -> bool {
     keep_recent = int(cp["keep_recent"]);
     comp_model = cp["model"];
     on_compaction = (
@@ -708,17 +719,15 @@ impl BaseLLM._compact_messages(mt_run: MTRuntime, cp: dict[str, any]) -> None {
     }
     tokens_before = _estimate_tokens(msg_dicts);
     tokens_after = _estimate_tokens(compacted);
-    if tokens_after >= tokens_before and original_len >= 4 {
-        raise CompactionNotEffectiveError(
-            "Compaction produced no reduction in message history - "
-            "check on_compaction hook or compaction model."
-        );
+    if tokens_after >= tokens_before {
+        return False;
     }
     mt_run.messages = compacted;
     logger.info(
         f"byLLM compaction: reduced message list from {original_len} to "
         f"{len(compacted)} messages, about {tokens_before} to {tokens_after} tokens"
     );
+    return True;
 }
 
 
