@@ -1,8 +1,5 @@
-"""Compaction over a `conversation=` history that already holds tool calls.
-
-A tool call that comes back in through `conversation=` must reach the summariser, and
-the model, in the same shape as one made during the turn: a dict.
-"""
+"""Compaction over a `conversation=` history that already holds tool calls: the call
+must reach the summariser, and the model, in the same shape as one made during the turn."""
 
 import from jaclang.byllm.lib { MockLLM }
 import from jaclang.byllm._optdeps.litellm { LiteLLMMessage }
@@ -15,7 +12,13 @@ glob LOOKUP_CALL: list[dict[str, any]] = [
              "type": "function",
              "function": {"name": "lookup", "arguments": "{\"q\": \"x\"}"}
          }
-     ];
+     ],
+     RESULT_MSG: dict[str, any] = {
+         "role": "tool",
+         "tool_call_id": "call_seed",
+         "name": "lookup",
+         "content": "SEEDED_RESULT"
+     };
 
 
 def lookup(q: str) -> str {
@@ -25,25 +28,43 @@ def lookup(q: str) -> str {
 
 """One prior tool exchange, seeded the way a caller holds it. The first message is the
 slot compaction treats as the task, so the exchange sits in the part it summarises."""
-def seeded_history(tool_call_msg: any) -> list[any] {
+def seeded_history(tool_call_msg: any, result_msg: any = None) -> list[any] {
     return [
         {"role": "user", "content": "OLD_QUESTION"},
         tool_call_msg,
-        {
-            "role": "tool",
-            "tool_call_id": "call_seed",
-            "name": "lookup",
-            "content": "SEEDED_RESULT"
-        },
+        result_msg if result_msg is not None else dict(RESULT_MSG),
         {"role": "assistant", "content": "OLD_ANSWER"}
     ];
 }
 
 
-"""The assistant tool-call message in each shape a caller can hold it in."""
-def tool_call_shapes(content: str = "") -> list[tuple[str, any]] {
-    msg = {"role": "assistant", "content": content, "tool_calls": LOOKUP_CALL};
-    return [("dict", msg), ("litellm message", LiteLLMMessage(**msg))];
+"""Each shape a caller can hold an assistant tool call in, with what its summariser
+line must then contain."""
+def tool_call_rows -> list[tuple[str, any, list[str]]] {
+    bare = {"role": "assistant", "content": "", "tool_calls": LOOKUP_CALL};
+    with_text = {
+        "role": "assistant",
+        "content": "LET_ME_CHECK",
+        "tool_calls": LOOKUP_CALL
+    };
+    second = {
+        "id": "call_two",
+        "type": "function",
+        "function": {"name": "count", "arguments": "{\"n\": 2}"}
+    };
+    two = {"role": "assistant", "content": "", "tool_calls": LOOKUP_CALL + [second]};
+    called = "[assistant] called: lookup({\"q\": \"x\"})";
+    return [
+        ("dict", bare, [called]),
+        ("litellm message", LiteLLMMessage(**bare), [called]),
+        ("dict, with text", with_text, ["LET_ME_CHECK", "called: lookup("]),
+        (
+            "litellm message, with text",
+            LiteLLMMessage(**with_text),
+            ["LET_ME_CHECK", "called: lookup("]
+        ),
+        ("two calls", two, ["called: lookup({\"q\": \"x\"}); count({\"n\": 2})"])
+    ];
 }
 
 
@@ -68,6 +89,17 @@ def ask_with_compaction(history: list[any]) -> MockLLM {
 }
 
 
+"""The messages the first request carried, for a turn that needs no compaction."""
+def sent_messages(history: list[any]) -> list[any] {
+    llm = MockLLM(outputs=[finish("done")]);
+
+    def ask(question: str) -> str by llm(tools=[lookup], conversation=history);
+
+    ask("NEW_QUESTION");
+    return list(llm.sent("messages")[0]);
+}
+
+
 """The text handed to the summariser: its request, minus the instruction."""
 def summariser_input(llm: MockLLM) -> str {
     requests = [
@@ -81,34 +113,19 @@ def summariser_input(llm: MockLLM) -> str {
 
 
 test "a tool call from conversation= reaches the summariser as a called line" {
-    for (shape, msg) in tool_call_shapes() {
+    for (shape, msg, wants) in tool_call_rows() {
         text = summariser_input(ask_with_compaction(seeded_history(msg)));
-        assert "[assistant] called: lookup({\"q\": \"x\"})" in text , (
-            f"{shape}: the tool call must read as a called line:\n{text}"
-        );
+        for want in wants {
+            assert want in text , f"{shape}: {want!r} is missing from:\n{text}";
+        }
         assert "Message(" not in text , f"{shape}: a Python repr leaked into:\n{text}";
     }
 }
 
 
-test "a tool call with text keeps both in the summariser input" {
-    for (shape, msg) in tool_call_shapes("LET_ME_CHECK") {
-        text = summariser_input(ask_with_compaction(seeded_history(msg)));
-        assert "LET_ME_CHECK" in text , f"{shape}: the assistant text is lost:\n{text}";
-        assert "called: lookup(" in text , f"{shape}: the tool call is lost:\n{text}";
-    }
-}
-
-
 test "the model is sent a tool call from conversation= as a dict" {
-    for (shape, msg) in tool_call_shapes() {
-        history = seeded_history(msg);
-        llm = MockLLM(outputs=[finish("done")]);
-
-        def ask(question: str) -> str by llm(tools=[lookup], conversation=history);
-
-        ask("NEW_QUESTION");
-        sent = llm.sent("messages")[0];
+    for (shape, msg, _) in tool_call_rows() {
+        sent = sent_messages(seeded_history(msg));
         assert all(isinstance(m, dict) for m in sent) , (
             f"{shape}: every message is sent as a dict: {[
                 type(m).__name__ for m in sent
@@ -123,4 +140,26 @@ test "the model is sent a tool call from conversation= as a dict" {
             f"{shape}: the tool call must survive the round trip: {calls}"
         );
     }
+}
+
+
+test "a wrapped tool result and a provider's own fields survive the round trip" {
+    rich = {
+        "role": "assistant",
+        "content": "",
+        "reasoning_content": "THOUGHT",
+        "tool_calls": LOOKUP_CALL
+    };
+    sent = sent_messages(
+        seeded_history(LiteLLMMessage(**rich), LiteLLMMessage(**RESULT_MSG))
+    );
+    assert all(isinstance(m, dict) for m in sent) , (
+        f"every message is sent as a dict: {[type(m).__name__ for m in sent]}"
+    );
+    assert any(m.get("tool_call_id") == "call_seed" for m in sent) , (
+        f"the tool result must stay linked to its call: {sent}"
+    );
+    assert any("reasoning_content" in m for m in sent) , (
+        f"a provider's own fields must survive the unwrap: {sent}"
+    );
 }
