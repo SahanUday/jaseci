@@ -270,3 +270,32 @@ test "a history still over the threshold after compaction lets the call continue
     assert llm.exhausted();
     assert "still at or above threshold" in logs.text();
 }
+
+
+test "a hook that shrinks a tool result without removing a message counts as a reduction" {
+    llm = MockLLM(
+        ctx_window=1000,
+        outputs=[
+            call("read_chunk", usage={"prompt_tokens": 100}),
+            call("read_chunk", usage={"prompt_tokens": 900}),
+            finish("ok")
+        ]
+    );
+
+    def stub_results(msgs: list[any], keep_recent: int) -> list[any] {
+        return [
+            dict(m, content="[stubbed]") if m["role"] == "tool" else m for m in msgs
+        ];
+    }
+
+    def ask(q: str) -> str by llm(tools=[read_chunk], on_compaction=stub_results);
+
+    with capture_loguru() as logs {
+        assert ask("go") == "ok";
+    }
+    # Same message count, far fewer tokens: the next request carries the stub.
+    assert len(sent_messages(llm, 2)) == 6;
+    assert sent_messages(llm, 2)[3]["content"] == "[stubbed]";
+    assert "could not reduce the message history" not in logs.text();
+    assert "reduced message list from 5 to 5 messages" in logs.text();
+}

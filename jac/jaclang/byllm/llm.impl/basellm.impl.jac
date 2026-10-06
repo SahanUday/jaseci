@@ -418,8 +418,8 @@ glob _CHARS_PER_TOKEN: int = 4,
      _MIN_SLICE_RATIO: float = 0.05;
 
 
-def _message_role(msg: any) -> str {
-    return str(msg.get("role") if isinstance(msg, dict) else msg?.role);
+def _message_role(msg: dict[str, any]) -> str {
+    return str(msg.get("role"));
 }
 
 
@@ -434,7 +434,7 @@ def _compaction_line(msg: any) -> str {
             p.get("text", "") if isinstance(p, dict) else str(p) for p in content
         );
     }
-    if str(role) == "assistant" and not content {
+    if str(role) == "assistant" {
         tool_calls: any = msg.get("tool_calls") or [];
         if tool_calls {
             descs: list[str] = [];
@@ -450,7 +450,8 @@ def _compaction_line(msg: any) -> str {
                     or "";
                 descs.append(f"{name}({args})");
             }
-            content = "called: " + "; ".join(descs);
+            called = "called: " + "; ".join(descs);
+            content = f"{content}\n{called}" if content else called;
         }
     }
     return f"[{role}] {content}";
