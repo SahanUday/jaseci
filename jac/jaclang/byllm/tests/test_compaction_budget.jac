@@ -12,20 +12,9 @@ import from jaclang.byllm.lib { MockLLM }
 import from support { call, capture_loguru, fail, finish, roles, sent_messages }
 
 
-def step -> str {
-    return "stepped";
-}
-
-
-# About 300 tokens: bigger than the tail budget of a 1000-token window.
-def read_chunk -> str {
-    return "x" * 1200;
-}
-
-
-# About 10000 tokens: far over the tail budget of a 1000-token window.
-def read_huge -> str {
-    return "x" * 40000;
+"""A tool result of `size` characters: 4 characters is about one token."""
+def chunk(size: int) -> str {
+    return "x" * size;
 }
 
 
@@ -79,20 +68,12 @@ def compact(
 }
 
 
-def tool_contents(messages: list[any]) -> list[str] {
+"""The `key` of every message with this role; "id" means the first tool call's."""
+def field(messages: list[any], role: str, key: str) -> list[any] {
     return [
-        m["content"]
+        m["tool_calls"][0]["id"] if key == "id" else m[key]
         for m in messages
-        if m["role"] == "tool"
-    ];
-}
-
-
-def kept_call_ids(compacted: list[any]) -> list[str] {
-    return [
-        m["tool_calls"][0]["id"]
-        for m in compacted
-        if m["role"] == "assistant"
+        if m["role"] == role
     ];
 }
 
@@ -115,12 +96,12 @@ def one_turn(
 test "the default settings compact when the threshold is crossed after two rounds" {
     (llm, _) = one_turn(
         [
-            call("read_chunk", usage={"prompt_tokens": 100}),
-            call("read_chunk", usage={"prompt_tokens": 900}),
+            call("chunk", {"size": 1200}, usage={"prompt_tokens": 100}),
+            call("chunk", {"size": 1200}, usage={"prompt_tokens": 900}),
             "SUMMARY_TEXT",
             finish("ok")
         ],
-        [read_chunk]
+        [chunk]
     );
     # The third request is the summariser's: it saw only the first round.
     assert [len(m) for m in llm.sent("messages")] == [2, 4, 2, 5];
@@ -136,7 +117,7 @@ test "the kept tail is the newest rounds that fit the token budget" {
         ("the newest round is kept however large", 6000, ["call_4_0"])
     ];
     for (label, result_chars, expected) in cases {
-        got = kept_call_ids(compact(history(4, result_chars)));
+        got = field(compact(history(4, result_chars)), "assistant", "id");
         assert got == expected , f"{label}: kept {got}";
     }
 }
@@ -153,8 +134,8 @@ test "the kept tail's results are clipped on a copy only when they exceed the bu
         )
     ];
     for (label, messages, want_lens, clipped) in cases {
-        before = tool_contents(messages);
-        got = tool_contents(compact(messages));
+        before = field(messages, "tool", "content");
+        got = field(compact(messages), "tool", "content");
         assert len(got) == len(want_lens) , f"{label}: {len(got)} results kept";
         for (content, want) in zip(got, want_lens) {
             assert want <= len(content) < want + 100 , (
@@ -162,7 +143,7 @@ test "the kept tail's results are clipped on a copy only when they exceed the bu
             );
             assert ("[truncated" in content) == clipped , label;
         }
-        assert tool_contents(messages) == before , f"{label}: the input was mutated";
+        assert field(messages, "tool", "content") == before , f"{label}: the input was mutated";
     }
 }
 
@@ -185,7 +166,7 @@ test "a slice too small to be worth a summariser call is left alone" {
 test "a context overflow caused by one huge tool result is recovered by truncating it" {
     (llm, _) = one_turn(
         [
-            call("read_huge"),
+            call("chunk", {"size": 40000}),
             fail(
                 litellm.exceptions.ContextWindowExceededError(
                     message="ctx exceeded", model="mockllm", llm_provider="openai"
@@ -193,7 +174,7 @@ test "a context overflow caused by one huge tool result is recovered by truncati
             ),
             finish("ok")
         ],
-        [read_huge]
+        [chunk]
     );
     # The overflowing request, then the retry; only the retry carries the clipped result.
     assert len(sent_messages(llm, 1)[-1]["content"]) == 40000;
@@ -208,11 +189,11 @@ test "a context overflow caused by one huge tool result is recovered by truncati
 test "a threshold crossing with nothing worth summarising neither fails nor summarises" {
     (llm, logs) = one_turn(
         [
-            call("step", usage={"prompt_tokens": 100}),
-            call("step", usage={"prompt_tokens": 900}),
+            call("chunk", {"size": 8}, usage={"prompt_tokens": 100}),
+            call("chunk", {"size": 8}, usage={"prompt_tokens": 900}),
             finish("ok")
         ],
-        [step]
+        [chunk]
     );
     assert [len(m) for m in llm.sent("messages")] == [2, 4, 6];
     assert "Compacting message history" in logs;
@@ -223,13 +204,13 @@ test "a threshold crossing with nothing worth summarising neither fails nor summ
 test "a history still over the threshold after compaction lets the call continue" {
     (llm, logs) = one_turn(
         [
-            call("read_chunk", usage={"prompt_tokens": 100}),
-            call("read_chunk", usage={"prompt_tokens": 900}),
+            call("chunk", {"size": 1200}, usage={"prompt_tokens": 100}),
+            call("chunk", {"size": 1200}, usage={"prompt_tokens": 900}),
             "SUMMARY_TEXT",
-            call("read_chunk", usage={"prompt_tokens": 850}),
+            call("chunk", {"size": 1200}, usage={"prompt_tokens": 850}),
             finish("ok")
         ],
-        [read_chunk]
+        [chunk]
     );
     assert llm.exhausted();
     assert "still at or above threshold" in logs;
@@ -245,11 +226,11 @@ test "a hook that shrinks a tool result without removing a message counts as a r
 
     (llm, logs) = one_turn(
         [
-            call("read_chunk", usage={"prompt_tokens": 100}),
-            call("read_chunk", usage={"prompt_tokens": 900}),
+            call("chunk", {"size": 1200}, usage={"prompt_tokens": 100}),
+            call("chunk", {"size": 1200}, usage={"prompt_tokens": 900}),
             finish("ok")
         ],
-        [read_chunk],
+        [chunk],
         on_compaction=stub_results
     );
     # Same message count, far fewer tokens: the next request carries the stub.
