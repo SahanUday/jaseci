@@ -1,17 +1,11 @@
 """The system prompt belongs to the call, never to the caller's `conversation=` list.
 
-Compaction hands back copies of the messages it was given, the system prompt among
-them. Whatever the list holds is replayed on the next call, so a stored copy would be
-sent next to the real one every time.
+Compaction hands back copies of the messages, the system prompt among them, and
+whatever the list holds is replayed on the next call.
 """
 
 import from jaclang.byllm.lib { MockLLM }
-import from support { call, finish, roles, say }
-
-
-def step -> str {
-    return "stepped";
-}
+import from support { call, capture_loguru, finish, roles, say }
 
 
 """Big enough that the built-in compaction has something worth summarising."""
@@ -26,84 +20,41 @@ def keep_two(msgs: list[any], keep_recent: int) -> list[any] {
 }
 
 
-def stored_roles(history: list[dict[str, any]]) -> list[str] {
-    return [m["role"] for m in history];
-}
+test "a compaction does not store the system prompt, so the next turn sends one" {
+    rows = [
+        ("a hook that keeps it", keep_two, []),
+        ("the built-in compaction", None, [say("SUMMARY")])
+    ];
+    for (label, hook, summary) in rows {
+        history: list[dict[str, any]] = [];
+        llm = MockLLM(
+            ctx_window=1000,
+            outputs=[
+                call("read", usage={"prompt_tokens": 100}),
+                call("read", usage={"prompt_tokens": 850})
+            ]
+                + summary
+                + [finish("first"), finish("second")]
+        );
 
+        def ask(q: str) -> str by llm(
+            tools=[read],
+            conversation=history,
+            on_compaction=hook,
+            keep_recent_iterations=1
+        );
 
-test "a compaction hook that keeps the system prompt does not store it" {
-    history: list[dict[str, any]] = [];
-    llm = MockLLM(
-        ctx_window=1000,
-        outputs=[
-            call("step", usage={"prompt_tokens": 100}),
-            call("step", usage={"prompt_tokens": 850}),
-            finish("ok")
-        ]
-    );
+        with capture_loguru() as logs {
+            ask("one");
+        }
+        assert "reduced message list" in logs.text() , f"{label}: did not compact";
+        ask("two");
 
-    def ask(q: str) -> str by llm(
-        tools=[step], conversation=history, on_compaction=keep_two
-    );
-
-    ask("hello");
-
-    assert "system" not in stored_roles(history) , f"stored: {stored_roles(history)}";
-}
-
-
-test "the built-in compaction does not store the system prompt" {
-    history: list[dict[str, any]] = [];
-    llm = MockLLM(
-        ctx_window=1000,
-        outputs=[
-            call("read", usage={"prompt_tokens": 100}),
-            call("read", usage={"prompt_tokens": 100}),
-            call("read", usage={"prompt_tokens": 850}),
-            say("SUMMARY"),
-            finish("ok")
-        ]
-    );
-
-    def ask(q: str) -> str by llm(
-        tools=[read], conversation=history, keep_recent_iterations=1
-    );
-
-    ask("hello");
-
-    assert any(
-        "[Compacted context summary]" in str(m.get("content")) for m in history
-    ) , f"the run did not compact: {history}";
-    assert "system" not in stored_roles(history) , f"stored: {stored_roles(history)}";
-}
-
-
-test "later turns send one system prompt however often compaction ran" {
-    history: list[dict[str, any]] = [];
-    llm = MockLLM(
-        ctx_window=1000,
-        outputs=[
-            call("step", usage={"prompt_tokens": 850}),
-            finish("first"),
-            call("step", usage={"prompt_tokens": 850}),
-            finish("second"),
-            finish("third")
-        ]
-    );
-
-    def ask(q: str) -> str by llm(
-        tools=[step], conversation=history, on_compaction=keep_two
-    );
-
-    ask("one");
-    ask("two");
-    ask("three");
-
-    assert "system" not in stored_roles(history) , f"stored: {stored_roles(history)}";
-    last_request = len(llm.sent("messages")) - 1;
-    assert roles(llm, last_request).count("system") == 1 , (
-        f"the last request: {roles(llm, last_request)}"
-    );
+        stored = [m["role"] for m in history];
+        assert "system" not in stored , f"{label}: stored {stored}";
+        last = roles(llm, len(llm.sent("messages")) - 1);
+        assert last.count("system") == 1 , f"{label}: the next turn sent {last}";
+    }
 }
 
 
@@ -119,11 +70,9 @@ test "a system message already stored in the list is not replayed or kept" {
 
     ask("next question");
 
-    assert roles(llm) == ["system", "user", "assistant", "user"] , (
-        f"sent: {roles(llm)}"
-    );
+    assert roles(llm) == ["system", "user", "assistant", "user"] , f"sent: {roles(
+        llm
+    )}";
     assert "STORED_SYSTEM_PROMPT" not in str(llm.sent("messages")[0]);
-    assert stored_roles(history) == ["user", "assistant", "user", "assistant"] , (
-        f"stored: {stored_roles(history)}"
-    );
+    assert [m["role"] for m in history] == ["user", "assistant", "user", "assistant"];
 }
