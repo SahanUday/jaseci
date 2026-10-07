@@ -14,6 +14,12 @@ def step -> str {
 }
 
 
+"""Big enough that the built-in compaction has something worth summarising."""
+def read -> str {
+    return "result " * 80;
+}
+
+
 """Keeps the system prompt and the task, as the `on_compaction` docs describe."""
 def keep_two(msgs: list[any], keep_recent: int) -> list[any] {
     return [msgs[0], msgs[1]];
@@ -51,21 +57,23 @@ test "the built-in compaction does not store the system prompt" {
     llm = MockLLM(
         ctx_window=1000,
         outputs=[
-            call("step", usage={"prompt_tokens": 100}),
-            call("step", usage={"prompt_tokens": 100}),
-            call("step", usage={"prompt_tokens": 850}),
+            call("read", usage={"prompt_tokens": 100}),
+            call("read", usage={"prompt_tokens": 100}),
+            call("read", usage={"prompt_tokens": 850}),
             say("SUMMARY"),
             finish("ok")
         ]
     );
 
     def ask(q: str) -> str by llm(
-        tools=[step], conversation=history, keep_recent_iterations=1
+        tools=[read], conversation=history, keep_recent_iterations=1
     );
 
     ask("hello");
 
-    assert any("SUMMARY" in str(m.get("content")) for m in history) , f"the run did not compact: {history}";
+    assert any(
+        "[Compacted context summary]" in str(m.get("content")) for m in history
+    ) , f"the run did not compact: {history}";
     assert "system" not in stored_roles(history) , f"stored: {stored_roles(history)}";
 }
 
