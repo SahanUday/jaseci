@@ -1101,6 +1101,7 @@ obj InteropManifest {
         provider_routes: dict[(str, str)] = {};
 
     has native_imports: list[InteropBinding] { getter; }
+    has callable_native_imports: list[InteropBinding] { getter; }
     has native_exports: list[InteropBinding] { getter; }
     has native_cross_module_imports: list[InteropBinding] { getter; }
     has client_native_imports: list[InteropBinding] { getter; }
@@ -1134,6 +1135,7 @@ obj CodeGenTarget {
         native_object: (bytes | None) = None,
         native_iface: (NativeIface | None) = None,
         native_deps: list[str] = [],
+        native_codespace: bool = False,
         _interop_manifest: (InteropManifest | None) = None,
         interop_py_funcs: dict[(str, any)] = {},
         _interop_callbacks: list[any] = [],
