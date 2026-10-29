@@ -207,7 +207,9 @@ test "a turn cut short before its results arrived does not save the dangling cal
         ("half answered", ["a", "b"], ["a"], "", ["a"], 3),
         ("none answered, no text", ["a"], [], "", [], 1),
         ("none answered, with text", ["a"], [], "thinking", [], 2),
-        ("all answered", ["a", "b"], ["a", "b"], "", ["a", "b"], 4)
+        ("all answered", ["a", "b"], ["a", "b"], "", ["a", "b"], 4),
+        ("no id, answered", [""], [""], "", [""], 3),
+        ("no id, no result", [""], [], "", [], 1)
     ] {
         messages = _turn_messages(call_ids, answered, content);
         persisted = _persisted(messages);
@@ -226,26 +228,25 @@ test "a turn cut short before its results arrived does not save the dangling cal
     }
 }
 
-test "an earlier turn's result does not answer a call that reuses its id" {
-    cut_short = {
-        "role": "assistant",
-        "content": "",
-        "tool_calls": [_tool_call_dict("c1")]
-    };
-    persisted = _persisted(
-        _turn_messages(["c1"], ["c1"])
-            + [{"role": "user", "content": "again"}, cut_short]
-    );
-
-    assert unanswered(persisted) == [] , f"a reused id was taken as answered: {persisted}";
-    assert [m["role"] for m in persisted] == ["user", "assistant", "tool", "user"] , (
-        f"only the cut-short call should be gone, got {persisted}"
-    );
-}
-
-test "a call with no id is left alone, since no result can be matched to it" {
-    anonymous = _turn_messages([""], [""]);
-    assert len(_persisted(anonymous)) == len(anonymous) , "an id-less call was dropped";
+test "a result answers only the call before it, so a reused id cannot hide a cut-short call" {
+    answered = _turn_messages(["c1"], ["c1"]);
+    cut_short = _turn_messages(["c1"], []);
+    for (label, messages, roles) in [
+        (
+            "answered turn, then a cut-short one",
+            answered + cut_short,
+            ["user", "assistant", "tool", "user"]
+        ),
+        (
+            "cut-short turn, then an answered one",
+            cut_short + answered,
+            ["user", "user", "assistant", "tool"]
+        )
+    ] {
+        persisted = _persisted(messages);
+        assert unanswered(persisted) == [] , f"{label}: a reused id was taken as answered: {persisted}";
+        assert [m["role"] for m in persisted] == roles , f"{label}: got {persisted}";
+    }
 }
 
 test "a message object is edited on a copy, like a dict" {
@@ -273,19 +274,24 @@ test "a message object is edited on a copy, like a dict" {
     );
 }
 
+"""A finish_tool that fails on its first call and succeeds after."""
+def _flaky_finish -> any {
+    attempts = [0];
+
+    def finish_tool(final_output: str) -> str {
+        attempts[0] += 1;
+        if attempts[0] == 1 {
+            raise FinishToolError("simulated finish invocation failure");
+        }
+        return final_output;
+    }
+
+    return finish_tool;
+}
+
 test "a failed finish_tool retries with the call after it answered" {
     for mode in MODES {
         RAN.clear();
-        attempts = [0];
-
-        def finish_tool(final_output: str) -> str {
-            attempts[0] += 1;
-            if attempts[0] == 1 {
-                raise FinishToolError("simulated finish invocation failure");
-            }
-            return final_output;
-        }
-
         streaming = mode != "plain";
         llm = MockLLM(
             outputs=[calls([_finish_entry(), _call(4, 5, "c2")]), finish("second try")]
@@ -293,7 +299,7 @@ test "a failed finish_tool retries with the call after it answered" {
         );
 
         def ask(q: str) -> str by llm(
-            tools=[mul, finish_tool],
+            tools=[mul, _flaky_finish()],
             stream=streaming,
             logging=(mode == "events"),
             stream_handler=([].append if mode == "handler" else None)
@@ -316,5 +322,64 @@ test "a failed finish_tool retries with the call after it answered" {
         assert answer == ("second try" if mode == "plain" else "FINAL") , (
             f"mode={mode}: got {answer!r}"
         );
+    }
+}
+
+"""Tool results that no tool call directly before them asked for."""
+def orphan_results(messages: list[any]) -> list[str] {
+    orphans: list[str] = [];
+    asked: list[str] = [];
+    for m in messages {
+        if m.get("role") != "tool" {
+            asked = [str(tc["id"]) for tc in (m.get("tool_calls") or [])];
+        } elif str(m.get("tool_call_id")) not in asked {
+            orphans.append(str(m.get("tool_call_id")));
+        }
+    }
+    return orphans;
+}
+
+"""A prior exchange with a tool result big enough to be worth summarising."""
+def _seed_history -> list[dict[str, any]] {
+    return [
+        {"role": "user", "content": "OLD_QUESTION"},
+        {"role": "assistant", "content": "", "tool_calls": [_tool_call_dict("seed")]},
+        {
+            "role": "tool",
+            "tool_call_id": "seed",
+            "name": "mul",
+            "content": "detail " * 80
+        },
+        {"role": "assistant", "content": "OLD_ANSWER"}
+    ];
+}
+
+test "a failed finish_tool followed by a compaction leaves no result without its call" {
+    for (label, entries) in [
+        ("with a call after it", [_finish_entry(), _call(4, 5, "c2")]),
+        ("alone", [_finish_entry()])
+    ] {
+        history = _seed_history();
+        llm = MockLLM(
+            ctx_window=1000,
+            outputs=[
+                calls(entries),
+                finish("ok", call_id="cf2", usage={"prompt_tokens": 900}),
+                say("SUMMARY")
+            ]
+        );
+
+        def ask(q: str) -> str by llm(
+            tools=[mul, _flaky_finish()], conversation=history, keep_recent_iterations=3
+        );
+
+        ask("go");
+
+        assert len(llm.seen) == 3 , f"{label}: no compaction ran, {len(
+            llm.seen
+        )} calls";
+        assert orphan_results(history) == [] , f"{label}: results without their call: {history}";
+        assert unanswered(history) == [] , f"{label}: calls without their result: {history}";
+        assert "finish_tool" not in tool_names(history) , f"{label}: finish_tool leaked: {history}";
     }
 }

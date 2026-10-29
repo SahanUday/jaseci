@@ -281,6 +281,8 @@ def _is_system_message(msg: any) -> bool;
 
 def _is_finish_tool_call(tc: any) -> bool;
 
+def _is_finish_result(msg: any) -> bool;
+
 def _tool_calls_of(msg: any) -> list[any];
 
 def _tool_call_id(tc: any) -> str;
@@ -307,22 +309,12 @@ impl MTRuntime.get_history_for_persist -> list[MessageType] {
         ) {
             continue;
         }
-        if isinstance(msg, ToolCallResultMsg) and msg.name == "finish_tool" {
+        if _is_finish_result(msg) {
             continue;
         }
         tool_calls = _tool_calls_of(msg);
-        if tool_calls {
-            kept = [
-                tc
-                for tc in tool_calls
-                if not _is_finish_tool_call(tc)
-            ];
-            if len(kept) < len(tool_calls) {
-                if kept {
-                    out.append(_with_tool_calls(msg, kept));
-                }
-                continue;
-            }
+        if tool_calls and all(_is_finish_tool_call(tc) for tc in tool_calls) {
+            continue;
         }
         out.append(msg);
     }
@@ -406,6 +398,12 @@ impl _is_finish_tool_call(tc: any) -> bool {
     return False;
 }
 
+impl _is_finish_result(msg: any) -> bool {
+    role: any = msg.get("role") if isinstance(msg, dict) else msg?.role;
+    name: any = msg.get("name") if isinstance(msg, dict) else msg?.name;
+    return role == MessageRole.TOOL and name == "finish_tool";
+}
+
 impl _tool_calls_of(msg: any) -> list[any] {
     tool_calls: any = msg.get("tool_calls")
         if isinstance(msg, dict)
@@ -444,8 +442,7 @@ impl _drop_unanswered_calls(msgs: list[any]) -> list[any] {
         answered = _results_after(msgs, i + 1);
         kept: list[any] = [];
         for tc in tool_calls {
-            call_id = _tool_call_id(tc);
-            if call_id == "" or call_id in answered {
+            if _tool_call_id(tc) in answered {
                 kept.append(tc);
             }
         }
