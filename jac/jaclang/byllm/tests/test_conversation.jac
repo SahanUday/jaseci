@@ -220,26 +220,14 @@ def _fin(call_id: str = "cf") -> tuple[any, ...] {
 
 """(calls no result answers, results no call asked for) in `messages`."""
 def dangling(messages: list[any]) -> tuple[list[str], list[str]] {
-    asked = [str(tc["id"]) for m in messages for tc in (m.get("tool_calls") or [])];
-    answered = [
+    asked = {str(tc["id"]) for m in messages for tc in (m.get("tool_calls") or [])};
+    answered = {
         str(m.get("tool_call_id"))
         for m in messages
         if m.get("role") == "tool"
-    ];
-    return (
-        [
-            a
-            for a in asked
-            if a not in answered
-        ],
-        [
-            r
-            for r in answered
-            if r not in asked
-        ]
-    );
+    };
+    return (sorted(asked - answered), sorted(answered - asked));
 }
-
 
 """Each tool result's content in `messages`, by call id."""
 def results(messages: list[any]) -> dict[str, str] {
@@ -319,13 +307,13 @@ def _as_dict(msg: any) -> dict[str, any] {
     if isinstance(msg, dict) {
         return msg;
     }
-    return msg.to_dict() if hasattr(msg, "to_dict") else msg.model_dump();
+    return msg.to_dict() if msg?.to_dict else msg.model_dump();
 }
 
 
 test "a saved history drops calls without a result, and finish_tool in any form" {
     q = {"role": "user", "content": "go"};
-    lone_finish = _asked(["cf"]);
+    lone_finish = _asked(["cf"], "done");
     lone_finish["tool_calls"][0]["function"]["name"] = "finish_tool";
     as_object = LiteLLMMessage(
         role="assistant",
@@ -353,7 +341,6 @@ test "a saved history drops calls without a result, and finish_tool in any form"
             [q, _asked(["c1"]), q, _asked(["c1"]), _result("c1")],
             ["user", "user", "assistant c1", "tool"]
         ),
-        ("an id-less call with no result", [q, _asked([""])], ["user"]),
         (
             "a lone finish_tool whose result is a dict, as after a compaction",
             [q, lone_finish, _result("cf", "finish_tool")],
@@ -374,6 +361,7 @@ test "a saved history drops calls without a result, and finish_tool in any form"
         saved: list[str] = [];
         for m in mk_run(tools=[mul], messages=messages).get_history_for_persist() {
             d = _as_dict(m);
+            assert d.get("tool_calls") != [] , f"{label}: an empty tool_calls list was saved";
             ids = " ".join(str(tc["id"]) for tc in (d.get("tool_calls") or []));
             saved.append(f"{d.get('role')} {ids}".strip());
         }

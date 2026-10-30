@@ -285,8 +285,6 @@ def _is_finish_result(msg: any) -> bool;
 
 def _tool_calls_of(msg: any) -> list[any];
 
-def _tool_call_id(tc: any) -> str;
-
 def _with_tool_calls(msg: any, tool_calls: list[any]) -> any;
 
 def _drop_unanswered_calls(msgs: list[any]) -> list[any];
@@ -411,11 +409,6 @@ impl _tool_calls_of(msg: any) -> list[any] {
     return tool_calls or [];
 }
 
-impl _tool_call_id(tc: any) -> str {
-    call_id: any = tc.get("id") if isinstance(tc, dict) else tc?.id;
-    return str(call_id or "");
-}
-
 impl _with_tool_calls(msg: any, tool_calls: list[any]) -> any {
     if isinstance(msg, dict) {
         edited = dict(msg);
@@ -442,7 +435,8 @@ impl _drop_unanswered_calls(msgs: list[any]) -> list[any] {
         answered = _results_after(msgs, i + 1);
         kept: list[any] = [];
         for tc in tool_calls {
-            if _tool_call_id(tc) in answered {
+            call_id: any = tc.get("id") if isinstance(tc, dict) else tc?.id;
+            if str(call_id or "") in answered {
                 kept.append(tc);
             }
         }
